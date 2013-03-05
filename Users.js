@@ -1,6 +1,8 @@
 (function (global) {
 
-	global.Appacitive.Users = new (function() {
+	"use strict";
+
+	var UserManager = function() {
 
 		authenticatedUser = null;
 
@@ -12,7 +14,7 @@
 			onSuccess = onSuccess || function(){};
 			onError = onError || function(){};
 
-			if (authenticatedUser == null) {
+			if (authenticatedUser === null) {
 				throw new Error('Current user is not set yet');
 			}
 			var currentUserId = authenticatedUser.__id;
@@ -32,15 +34,23 @@
 					onSuccess(data);
 				} else {
 					data = data || {};
-					data.message = data.message || 'Server error'
+					data.message = data.message || 'Server error';
 					onError(data);
 				}
 			};
 			request.onError = onError;
 			global.Appacitive.http.send(request);
-		}
+		};
 
-		this.createUser = function(user, onSuccess, onError) {
+		this.createUser = function(fields, onSuccess, onError) {
+			var users = new Appacitive.ArticleCollection({ schema: 'user' });
+			var user = users.createNewArticle(fields);
+			user.save(function() {
+				onSuccess(user);
+			}, onError);
+		};
+
+		this.createUser1 = function(user, onSuccess, onError) {
 			onSuccess = onSuccess || function(){};
 			onError = onError || function(){};
 			user = user || {};
@@ -51,7 +61,6 @@
 			var request = new global.Appacitive.HttpRequest();
 			request.method = 'put';
 			request.url = global.Appacitive.config.apiBaseUrl + global.Appacitive.storage.urlFactory.user.getCreateUserUrl();
-			console.log('SAVE: ' + request.url);
 			request.data = user;
 			request.onSuccess = function(data) {
 				if (data && data.user) {
@@ -67,7 +76,7 @@
 		this.authenticateUser = function(authRequest, onSuccess, onError) {
 			onSuccess = onSuccess || function(){};
 			onError = onError || function(){};
-			
+
 			var request = new global.Appacitive.HttpRequest();
 			request.method = 'post';
 			request.url = global.Appacitive.config.apiBaseUrl + global.Appacitive.storage.urlFactory.user.getAuthenticateUserUrl();
@@ -108,16 +117,18 @@
 					} else {
 						onError(a);
 					}
-				}
+				};
 				request.onError = function() {
 					onError();
-				}
+				};
 				Appacitive.http.send(request);
 			});
 		};
 
 		this.authenticateWithFacebook = this.signupWithFacebook;
 
-	})();
+	};
+
+	global.Appacitive.Users = new UserManager();
 
 })(window || process);

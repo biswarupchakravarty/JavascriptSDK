@@ -174,7 +174,7 @@
 			
 			if (isDirty) {
 				var _updateRequest = new global.Appacitive.HttpRequest();
-				_updateRequest.url = global.Appacitive.config.apiBaseUrl + global.Appacitive.storage.urlFactory[this.type].getUpdateUrl(article.__schematype, _snapshot.__id);
+				_updateRequest.url = global.Appacitive.config.apiBaseUrl + global.Appacitive.storage.urlFactory[this.type].getUpdateUrl(article.__schematype || article.__relationtype, _snapshot.__id);
 				_updateRequest.method = 'post';
 				_updateRequest.data = changeSet;
 				_updateRequest.onSuccess = function(data) {
