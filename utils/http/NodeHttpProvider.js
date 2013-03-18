@@ -2,6 +2,6 @@
 
 Appacitive.utils.http.NodeHttpProvider = function() {
 
-	throw new Error('Http is not implemented in NodeJs yet.')
-	
-}
+	throw new Error('Http is not implemented in NodeJs yet.');
+
+};

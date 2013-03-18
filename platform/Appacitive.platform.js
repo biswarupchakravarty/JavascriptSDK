@@ -4,23 +4,25 @@
 
 (function () {
 
+	"use strict";
+
 	Appacitive.platform = {};
 
-	if (window) {
+	if (typeof window != 'undefined') {
 		Appacitive.platform.isBrowser = true;
 
 		// first figure out device
 		var agents = ['Android','BlackBerry','iOS'];
 		var isMobile = false;
 		for (var agent in agents) {
-			if (agents.hasOwnProperty(agent) == false) return;
+			if (agents.hasOwnProperty(agent) === false) return;
 			if (window.navigator.userAgent.toLowerCase().indexOf(agents[agent].toLowerCase()) != -1) {
 				Appacitive.platform['is' + agents[agent]] = true;
 				isMobile = true;
 			}
 		}
 
-	} else if (process) {
+	} else if (typeof process != 'undefined') {
 		Appacitive.platform.isNode = true;
 	}
 

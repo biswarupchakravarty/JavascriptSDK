@@ -1,5 +1,7 @@
 (function (global) {
 
+	"use strict";
+
 	var _getFacebookProfile = function(onSuccess, onError) {
 		var r = new global.Appacitive.HttpRequest();
 		r.method = 'get';
@@ -14,7 +16,7 @@
 					fbUsername = fb[0].username;
 				}
 			}
-			if (fbUsername != null) {
+			if (fbUsername !== null) {
 				FB.api('/' + fbUsername, function(response) {
 					if (response) {
 						onSuccess(response);
@@ -25,10 +27,10 @@
 			} else {
 				onError();
 			}
-		}
+		};
 		r.onError = function() {
 			onError();
-		}
+		};
 		global.Appacitive.http.send(r);
 	};
 
@@ -42,7 +44,7 @@
 		}
 
 		return base;
-	}
+	};
 
 	global.Appacitive.BaseObject.prototype.getConnectedArticles = function(options) {
 		if (this.type != 'article') return null;
@@ -59,12 +61,12 @@
 	};
 
 	global.Appacitive.BaseObject.prototype.getConnected = function(options) {
-		if (!this.type == 'article') return null;
+		if (this.type != 'article') return null;
 		options = options || {};
 		options.onSuccess = options.onSuccess || function(){};
 		options.onError = options.onError || function(){};
 		options.articleId = this.get('__id');
-		
+
 	};
 
-})(window || process);
+})(global);

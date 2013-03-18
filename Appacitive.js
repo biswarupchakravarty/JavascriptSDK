@@ -3,17 +3,30 @@
 // in a browser, its going to be the 'window' object
 // when in node.js, it's going to be the 'process' object
 
-(function(global) {
-	
+var global;
+if (typeof window == 'undefined') {
+	global = process;
+} else {
+	global = window;
+}
+
+(function() {
+
+	"use strict";
+
 	var Oppan = {};
 	Oppan['GangnamStyle!!!'] = function() {
 		this.utils = {
 			http: {
 			}
-		}
+		};
 	};
 
-	if (!global.Appacitive) 
+	if (!global.Appacitive)
 		global.Appacitive = new Oppan['GangnamStyle!!!']();
 
-})(window||process);
+})();
+
+if (module && module.exports) {
+	exports = Appacitive;
+}

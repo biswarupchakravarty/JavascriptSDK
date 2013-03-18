@@ -48,7 +48,7 @@
         return (s1.indexOf(s2) == 0);
     }
 
-    window.dateFromWcf = function (input, throwOnInvalidInput) {
+    global.dateFromWcf = function (input, throwOnInvalidInput) {
         var pattern = /Date\(([^)]+)\)/;
         var results = pattern.exec(input);
         if (results.length != 2) {
@@ -64,7 +64,6 @@
      * @constructor
      */
     var UrlFactory = function () {
-        global.Appacitive = global.Appacitive || {};
         global.Appacitive.bag = global.Appacitive.bag || {};
         global.Appacitive.bag.accountName = global.Appacitive.bag.accountName || {};
         global.Appacitive.bag.selectedType = global.Appacitive.bag.selectedType || {};
@@ -846,4 +845,4 @@
     global.Appacitive.storage = global.Appacitive.storage || {};
     global.Appacitive.storage.urlFactory = new UrlFactory();
 
-})(window || process);
+})(global);

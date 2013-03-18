@@ -1,8 +1,10 @@
 (function (global) {
 
-	global.Appacitive.facebook = new (function() {
+	"use strict";
 
-		_accessToken = null;
+	var _facebook = function() {
+
+		var _accessToken = null;
 
 		this.requestLogin = function(onSuccess, onError) {
 			onSuccess = onSuccess || function(){};
@@ -20,7 +22,7 @@
 					onError();
 				}
 			}, {scope:'email,user_birthday'});
-		}
+		};
 
 		this.getCurrentUserInfo = function(onSuccess, onError) {
 			onSuccess = onSuccess || function(){};
@@ -32,7 +34,7 @@
 					onError();
 				}
 			});
-		}
+		};
 
 		this.__defineGetter__('accessToken', function() {
 			return _accessToken;
@@ -44,20 +46,22 @@
 
 		this.getProfilePictureUrl = function(username) {
 			return 'https://graph.facebook.com/' + username + '/picture';
-		}
+		};
 
 		this.logout = function(onSuccess, onError) {
 			onSuccess = onSuccess || function() {};
 			onError = onError || function(){};
 			try {
 				FB.logout(function(response) {
-				  onSuccess();
+					onSuccess();
 				});
 			} catch(e) {
 				onError(e.message);
 			}
 		};
 
-	})();
+	};
 
-})(window || process);
+	global.Appacitive.facebook = new _facebook();
+
+})(global);

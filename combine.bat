@@ -1,1 +1,1 @@
-type utils\http\httpModule.js utils\http\urlFactory.js EventManager.js config.js session.js queries.js baseObject.js guid.js articleCollection.js connectionCollection.js article.js connection.js Users.js email.js facebook.js > combined.js
+type utils\http\httpModule.js utils\http\urlFactory.js EventManager.js config.js session.js queries.js baseObject.js guid.js articleCollection.js connectionCollection.js article.js connection.js Users.js email.js facebook.js export.js > combined.js

@@ -1,5 +1,7 @@
 (function (global) {
 
+	"use strict";
+
 	var parseEndpoint = function(endpoint) {
 		var result = {
 			label: endpoint.label
@@ -73,4 +75,4 @@
 		return base;
 	};
 
-})(window || process);
+})(global);

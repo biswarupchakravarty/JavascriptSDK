@@ -4,7 +4,7 @@
 
 	var UserManager = function() {
 
-		authenticatedUser = null;
+		var authenticatedUser = null;
 
 		this.__defineGetter__('currentUser', function() {
 			return authenticatedUser;
@@ -131,4 +131,4 @@
 
 	global.Appacitive.Users = new UserManager();
 
-})(window || process);
+})(global);

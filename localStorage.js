@@ -1,6 +1,8 @@
 (function (global) {
 
-	global.Appacitive.localStorage = new (function() {
+	"use strict";
+
+	var A_LocalStorage = function() {
 
 		var _localStorage = window.localStorage || {};
 
@@ -13,8 +15,10 @@
 
 		this.get = function(key) {
 			return (!key ? null : _localStorage[key] || null);
-		}
+		};
 
-	})();
+	};
 
-})(window || process);
+	global.Appacitive.localStorage = new A_LocalStorage();
+
+})(global);

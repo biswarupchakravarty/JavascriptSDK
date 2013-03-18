@@ -1,6 +1,8 @@
 (function (global) {
 
-	global.Appacitive.twitter = new (function() {
+	"use strict";
+
+	var A_Twitter = function() {
 
 		var _accessToken = null, _accessTokenSecret = null;
 
@@ -12,6 +14,8 @@
 			_accessTokenSecret = v;
 		});
 
-	})();
+	};
 
-})(window || process);
+	global.Appacitive.twitter = new A_Twitter();
+
+})(global);

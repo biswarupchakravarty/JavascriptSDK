@@ -10,8 +10,8 @@ Appacitive.utils.http.JQueryHttpProvider = function() {
 			async: true,
 			success: (onSuccess || function(){}),
 			error: (onError || function(){})
-		})
-	}
+		});
+	};
 
 	this.post = function(request, onSuccess, onError) {
 		$.ajax({
@@ -22,8 +22,8 @@ Appacitive.utils.http.JQueryHttpProvider = function() {
 			async: true,
 			success: (onSuccess || function(){}),
 			error: (onError || function(){})
-		})
-	}
+		});
+	};
 
 	this.put = function(request, onSuccess, onError) {
 		$.ajax({
@@ -33,8 +33,8 @@ Appacitive.utils.http.JQueryHttpProvider = function() {
 			async: true,
 			success: (onSuccess || function(){}),
 			error: (onError || function(){})
-		})
-	}
+		});
+	};
 
 	this.del = function(request, onSuccess, onError) {
 		$.ajax({
@@ -43,7 +43,7 @@ Appacitive.utils.http.JQueryHttpProvider = function() {
 			async: true,
 			success: (onSuccess || function(){}),
 			error: (onError || function(){})
-		})
-	}
+		});
+	};
 
-}
+};

@@ -1,5 +1,7 @@
 (function(global) {
 
+	"use strict";
+
 	//base object for articles and connections
 	/**
 	* @constructor
@@ -41,7 +43,7 @@
 				} else {
 					onError();
 				}
-			}
+			};
 			global.Appacitive.http.send(getRequest);
 		};
 
@@ -73,7 +75,7 @@
 			}
 
 			// if deleteConnections is specified
-			if (options.deleteConnections && options.deleteConnections == true) {
+			if (options.deleteConnections && options.deleteConnections === true) {
 				if (url.indexOf('?') == -1) url += '?deleteconnections=true';
 				else url += '&deleteconnections=true';
 			}
@@ -92,15 +94,15 @@
 			};
 			_deleteRequest.beforeSend = function(r) {
 				console.log('DELETE: ' + r.url);
-			}
+			};
 			global.Appacitive.http.send(_deleteRequest);
 		};
 
-		this.getArticle = function() { return article; }
+		this.getArticle = function() { return article; };
 
 		// accessor function for the article's attributes
 		this.attributes = function() {
-			if (arguments.length == 0) {
+			if (arguments.length === 0) {
 				if (!article.__attributes) article.__attributes = {};
 				return article.__attributes;
 			} else if (arguments.length == 1) {
@@ -123,7 +125,7 @@
 					aggregates[key] = article[key];
 				}
 			}
-			if (arguments.length == 0) {
+			if (arguments.length === 0) {
 				return aggregates;
 			} else if (arguments.length == 1) {
 				return aggregates[arguments[0]];
@@ -136,14 +138,14 @@
 			if (key) {
 				return article[key];
 			}
-		}
+		};
 
 		this.set = function(key, value) {
 			if (key) {
 				article[key] = value;
 			}
 			return value;
-		}
+		};
 
 		// save
 		// if the object has an id, then it has been created -> update
@@ -151,7 +153,7 @@
 		this.save = function(onSuccess, onError) {
 			if (article.__id)
 				_update.apply(this, arguments);
-			else 
+			else
 				_create.apply(this, arguments);
 		};
 
@@ -161,7 +163,7 @@
 			var fieldList = [];
 			var changeSet = JSON.parse(JSON.stringify(_snapshot));
 			for (var property in article) {
-				if (typeof article[property] == 'undefined' || article[property] == null) {
+				if (typeof article[property] == 'undefined' || article[property] === null) {
 					changeSet[property] = null;
 					isDirty = true;
 				} else if (article[property] != _snapshot[property]) {
@@ -171,7 +173,7 @@
 					delete changeSet[property];
 				}
 			}
-			
+
 			if (isDirty) {
 				var _updateRequest = new global.Appacitive.HttpRequest();
 				_updateRequest.url = global.Appacitive.config.apiBaseUrl + global.Appacitive.storage.urlFactory[this.type].getUpdateUrl(article.__schematype || article.__relationtype, _snapshot.__id);
@@ -243,8 +245,8 @@
 			global.Appacitive.http.send(_saveRequest);
 		};
 
-	}
+	};
 
 	global.Appacitive.BaseObject = _BaseObject;
 
-})(window || process);
+})(global);

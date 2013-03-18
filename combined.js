@@ -1,10 +1,20 @@
 // monolithic file
 
-(function() {
+var global;
+
+(function () {
+
+	"use strict";
 
 	// create the global object
-	var global = window || process; 
-	var _initialize = function() {
+
+	if (typeof window == 'undefined') {
+		global = process;
+	} else {
+		global = window;
+	}
+
+	var _initialize = function () {
 		var t;
 		if (!global.Appacitive) {
 			global.Appacitive = {
@@ -14,7 +24,11 @@
 				}
 			};
 		}
-	}
+
+		if (module && module.exports) {
+			exports = global.Appacitive;
+		}
+	};
 	_initialize();
 
 	// httpRequest class, encapsulates the request 
@@ -22,14 +36,14 @@
 	/**
 	 * @constructor
 	 */
-	var HttpRequest = function() {
+	var HttpRequest = function () {
 		this.url = '';
 		this.data = {};
 		this.async = true;
 		this.headers = [];
 		this.method = 'GET';
 	};
-	
+
 	// httpBuffer class, stores a queue of the requests
 	// and fires them. Global level pre and post processing 
 	// goes here. 
@@ -38,7 +52,7 @@
 	/**
 	 * @constructor
 	 */
-	var HttpBuffer = function(httpTransport) {
+	var HttpBuffer = function (httpTransport) {
 
 		// validate the httpTransport passed
 		// and assign the callback
@@ -58,66 +72,66 @@
 		var _postProcessors = {}, _postCount = 0;
 
 		// public method to add a processor
-		this.addProcessor = function(processor) {
+		this.addProcessor = function (processor) {
 			if (!processor) return;
-			processor.pre = processor.pre || function() {}
-			processor.post = processor.post || function() {}
+			processor.pre = processor.pre || function () {};
+			processor.post = processor.post || function () {};
 
 			addPreprocessor(processor.pre);
 			addPostprocessor(processor.post);
-		}
+		};
 
 		// stores a preprocessor
 		// returns a numeric id that can be used to remove this processor
-		var addPreprocessor = function(preprocessor) {
+		var addPreprocessor = function (preprocessor) {
 			_preCount += 1;
 			_preProcessors[_preCount] = preprocessor;
 			return _preCount;
-		}
+		};
 
 		// removes a preprocessor
 		// returns true if it exists and has been removed successfully
 		// else false
-		var removePreprocessor = function(id) {
+		var removePreprocessor = function (id) {
 			if (_preProcessors[id]) {
-				delete (_preProcessors[id]);
+				delete(_preProcessors[id]);
 				return true;
 			} else {
 				return false;
 			}
-		}
+		};
 
 		// stores a postprocessor
 		// returns a numeric id that can be used to remove this processor
-		var addPostprocessor = function(postprocessor) {
+		var addPostprocessor = function (postprocessor) {
 			_postCount += 1;
 			_postProcessors[_postCount] = postprocessor;
 			return _postCount;
-		}
+		};
 
 		// removes a postprocessor
 		// returns true if it exists and has been removed successfully
 		// else false
-		var removePostprocessor = function(id) {
+		var removePostprocessor = function (id) {
 			if (_postProcessors[id]) {
-				delete (_postProcessors[id]);
+				delete(_postProcessors[id]);
 				return true;
 			} else {
 				return false;
 			}
-		}
+		};
 
 		// enqueues a request in the queue
 		// returns true is succesfully added
-		this.enqueueRequest = function(request) {
+		this.enqueueRequest = function (request) {
 			_queue.push(request);
-		}
+		};
 
 		// notifies the queue that there are requests pending
 		// this will start firing the requests via the method 
 		// passed while initalizing
-		this.notify = function() {
-			if (_queue.length == 0) return;
+		this.notify = function () {
+			if (_queue.length === 0) return;
 
 			// for convienience, extract the postprocessing object into an array
 			var _callbacks = [];
@@ -145,25 +159,25 @@
 				// results returned from the preprocessors
 				httpTransport.send(toFire, _callbacks, _state);
 			}
-		}
+		};
 
 		// callback to be invoked when a request has completed
-		this.onResponse = function(responseData) {
-			console.dir(responseData)
-		}
+		this.onResponse = function (responseData) {
+			console.dir(responseData);
+		};
 
-	}
+	};
 
 
 	// base httpTransport class
 	/**
 	 * @constructor
 	 */
-	var HttpTransport = function() {
-		var _notImplemented = function() {
+	var HttpTransport = function () {
+		var _notImplemented = function () {
 			throw new Error('Not Implemented Exception');
 		}
-		var _notProvided = function() {
+		var _notProvided = function () {
 			throw new Error('Delegate not provided');
 		}
 
@@ -172,47 +186,60 @@
 		this.inOnline = _notImplemented;
 
 		// needs these callbacks to be set
-		this.onResponse = function(response, request) { _notImplemented() };
-		this.onError = function(request) { _notImplemented() };
+		this.onResponse = function (response, request) {
+			_notImplemented()
+		};
+		this.onError = function (request) {
+			_notImplemented()
+		};
 	}
 
 	// jquery based http transport class
 	/**
 	 * @constructor
 	 */
-	var JQueryHttpTransport = function() {
+	var JQueryHttpTransport = function () {
 
 		var _super = new HttpTransport();
 
 		_super.type = 'jQuery based http provider';
 
-		_super.send = function(request, callbacks, states) {
+		_super.send = function (request, callbacks, states) {
 			if (typeof request.beforeSend == 'function') {
 				request.beforeSend(request);
 			}
 
 			switch (request.method.toLowerCase()) {
-				case 'get': _get(request, callbacks, states); break;
-				case 'post': _post(request, callbacks, states); break;
-				case 'put': _put(request, callbacks, states); break;
-				case 'delete': _delete(request, callbacks, states); break;
-				default: throw new Error('Unrecognized http method: ' + request.method);
+				case 'get':
+					_get(request, callbacks, states);
+					break;
+				case 'post':
+					_post(request, callbacks, states);
+					break;
+				case 'put':
+					_put(request, callbacks, states);
+					break;
+				case 'delete':
+					_delete(request, callbacks, states);
+					break;
+				default:
+					throw new Error('Unrecognized http method: ' + request.method);
 			}
-		}
+		};
 
-		_super.isOnline = function() {
+		_super.isOnline = function () {
 			return window.navigator.onLine || true;
-		}
+		};
 
-		var _executeCallbacks = function(response, callbacks, states) {
+		var _executeCallbacks = function (response, callbacks, states) {
 			if (callbacks.length != states.length) {
 				throw new Error('Callback length and state length mismatch!');
 			}
 
-			for (var x=0;x<callbacks.length;x+=1) {
+			for (var x = 0; x < callbacks.length; x += 1) {
 				callbacks[x].apply({}, [response, states[x]]);
 			}
-		}
+		};
 
 		var that = _super;
 
@@ -220,134 +247,151 @@
 		$.ajax = $.ajax || {};
 
 		var _get = function (request, callbacks, states) {
-		    $.ajax({
-		        url: request.url,
-		        type: 'GET',
-		        async: request.async,
-		        beforeSend: function (xhr) {
-		        	for (var x=0; x<request.headers.length; x += 1) {
-		        		xhr.setRequestHeader(request.headers[x].key, request.headers[x].value);
-		        	}
-		        },
-		        success: function (data) {
-		            // Hack to make things work in FF
-		            try { data = JSON.parse(data); } catch (e) { }
+			$.ajax({
+				url: request.url,
+				type: 'GET',
+				async: request.async,
+				beforeSend: function (xhr) {
+					for (var x = 0; x < request.headers.length; x += 1) {
+						xhr.setRequestHeader(request.headers[x].key, request.headers[x].value);
+					}
+				},
+				success: function (data) {
+					// Hack to make things work in FF
+					try {
+						data = JSON.parse(data);
+					} catch (e) {}
 
-		            // execute the callbacks first
-		            _executeCallbacks(data, callbacks, states);
+					// execute the callbacks first
+					_executeCallbacks(data, callbacks, states);
 
-	                that.onResponse(data, request);
-		        },
-		        error: function () {
-		        	that.onError(request);
-		        }
-		    });
+					that.onResponse(data, request);
+				},
+				error: function () {
+					that.onError(request);
+				}
+			});
 		};
 
 		var _post = function (request, callbacks, states) {
-		    $.ajax({
-		        url: request.url,
-		        type: 'POST',
-		        async: request.async,
-		        contentType: "application/json",
-		        data: JSON.stringify(request.data),
-		        beforeSend: function (xhr) {
-		        	for (var x=0; x<request.headers.length; x += 1) {
-		        		xhr.setRequestHeader(request.headers[x].key, request.headers[x].value);
-		        	}
-		        },
-		        success: function (data) {
-		            // Hack to make things work in FF
-		            try { data = JSON.parse(data); } catch (e) { }
+			$.ajax({
+				url: request.url,
+				type: 'POST',
+				async: request.async,
+				contentType: "application/json",
+				data: JSON.stringify(request.data),
+				beforeSend: function (xhr) {
+					for (var x = 0; x < request.headers.length; x += 1) {
+						xhr.setRequestHeader(request.headers[x].key, request.headers[x].value);
+					}
+				},
+				success: function (data) {
+					// Hack to make things work in FF
+					try {
+						data = JSON.parse(data);
+					} catch (e) {}
 
-		            // execute the callbacks first
-		            _executeCallbacks(data, callbacks, states);
+					// execute the callbacks first
+					_executeCallbacks(data, callbacks, states);
 
-	                that.onResponse(data, request);
-		        },
-		        error: function () {
-		        	that.onError(request);
-		        }
-		    });
+					that.onResponse(data, request);
+				},
+				error: function () {
+					that.onError(request);
+				}
+			});
 		};
 
 		var _put = function (request, callbacks, states) {
-		    $.ajax({
-		        url: request.url,
-		        type: 'PUT',
-		        contentType: "application/json",
-		        data: JSON.stringify(request.data),
-		        async: request.async,
-		        beforeSend: function (xhr) {
-		        	for (var x=0; x<request.headers.length; x += 1) {
-		        		xhr.setRequestHeader(request.headers[x].key, request.headers[x].value);
-		        	}
-		        },
-		        success: function (data) {
-		            // Hack to make things work in FF
-		            try { data = JSON.parse(data); } catch (e) { }
+			$.ajax({
+				url: request.url,
+				type: 'PUT',
+				contentType: "application/json",
+				data: JSON.stringify(request.data),
+				async: request.async,
+				beforeSend: function (xhr) {
+					for (var x = 0; x < request.headers.length; x += 1) {
+						xhr.setRequestHeader(request.headers[x].key, request.headers[x].value);
+					}
+				},
+				success: function (data) {
+					// Hack to make things work in FF
+					try {
+						data = JSON.parse(data);
+					} catch (e) {}
 
-		            // execute the callbacks first
-		            _executeCallbacks(data, callbacks, states);
+					// execute the callbacks first
+					_executeCallbacks(data, callbacks, states);
 
-	                that.onResponse(data, request);
-		        },
-		        error: function () {
-		        	that.onError(request);
-		        }
-		    });
+					that.onResponse(data, request);
+				},
+				error: function () {
+					that.onError(request);
+				}
+			});
 		};
 
 		var _delete = function (request, callbacks, states) {
-		    $.ajax({
-		        url: request.url,
-		        type: 'DELETE',
-		        async: request.async,
-		        beforeSend: function (xhr) {
-		        	for (var x=0; x<request.headers.length; x += 1) {
-		        		xhr.setRequestHeader(request.headers[x].key, request.headers[x].value);
-		        	}
-		        },
-		        success: function (data) {
-		            // Hack to make things work in FF
-		            try { data = JSON.parse(data); } catch (e) { }
+			$.ajax({
+				url: request.url,
+				type: 'DELETE',
+				async: request.async,
+				beforeSend: function (xhr) {
+					for (var x = 0; x < request.headers.length; x += 1) {
+						xhr.setRequestHeader(request.headers[x].key, request.headers[x].value);
+					}
+				},
+				success: function (data) {
+					// Hack to make things work in FF
+					try {
+						data = JSON.parse(data);
+					} catch (e) {}
 
-		            // execute the callbacks first
-		            _executeCallbacks(data, callbacks, states);
+					// execute the callbacks first
+					_executeCallbacks(data, callbacks, states);
 
-	                that.onResponse(data, request);
-		        },
-		        error: function () {
-		        	that.onError(request);
-		        }
-		    });
+					that.onResponse(data, request);
+				},
+				error: function () {
+					that.onError(request);
+				}
+			});
 		};
 
 		return _super;
-	}
+	};
+
+	var NodeHttpTransport = function() {
+		this.send = function() {
+
+		};
+	};
 
 	// http functionality provider
 	/**
 	 * @constructor
 	 */
-	var HttpProvider = function() {
-		var global = window || process;
+	var HttpProvider = function () {
 
 		// actual http provider
-		var _inner = global.Appacitive.runtime.isBrowser ? new JQueryHttpTransport() : NodeHttpTransport();
+		var _inner = global.Appacitive.runtime.isBrowser ? new JQueryHttpTransport() : new NodeHttpTransport();
 
 		// the http buffer
 		var _buffer = new HttpBuffer(_inner);
 
 		// used to pause/unpause the provider
-		_paused = false;
+		var _paused = false;
 
 		// allow pausing/unpausing
-		this.pause = function() { _paused = true; }
-		this.unpause = function() { _paused = false; }
+		this.pause = function () {
+			_paused = true;
+		}
+		this.unpause = function () {
+			_paused = false;
+		}
 
 		// allow adding processors to the buffer
-		this.addProcessor = function(processor) {
+		this.addProcessor = function (processor) {
 			var _processorError = new Error('Must provide a processor object with either a "pre" function or a "post" function.');
 			if (!processor) throw _processorError;
 			if (!processor.pre && !processor.post) throw _processorError;
@@ -356,9 +400,9 @@
 		}
 
 		// the method used to send the requests
-		this.send = function(request) {
+		this.send = function (request) {
 			_buffer.enqueueRequest(request);
-			
+
 			// notify the queue if the actual transport 
 			// is ready to send the requests
 			if (_inner.isOnline() && _paused == false) {
@@ -367,7 +411,7 @@
 		}
 
 		// method used to clear the queue
-		this.flush = function(force) {
+		this.flush = function (force) {
 			if (!force) {
 				if (_inner.isOnline()) {
 					_buffer.notify();
@@ -378,7 +422,7 @@
 		}
 
 		// the error handler
-		this.onError = function(request) {
+		this.onError = function (request) {
 			if (request.onError) {
 				if (request.context) {
 					request.onError.apply(request.context, []);
@@ -390,7 +434,7 @@
 		_inner.onError = this.onError;
 
 		// the success handler
-		this.onResponse = function(response, request) {
+		this.onResponse = function (response, request) {
 			if (request.onSuccess) {
 				if (request.context) {
 					request.onSuccess.apply(request.context, [response]);
@@ -409,20 +453,22 @@
 	/* PLUGIN: Http Utilities */
 
 	// optional plugin
-	(function(global){
+	(function (global) {
 
 		if (!global.Appacitive) return;
 		if (!global.Appacitive.http) return;
 
 		global.Appacitive.http.addProcessor({
-			pre: function(req) {return new Date().getTime()},
-			post: function(response, state) {
+			pre: function (req) {
+				return new Date().getTime()
+			},
+			post: function (response, state) {
 				var timeSpent = new Date().getTime() - state;
 				response._timeTakenInMilliseconds = timeSpent;
 			}
 		});
 
-	})(window || process);
+	})(global);
 
 	// compulsory plugin
 	// handles session and shits
@@ -432,18 +478,18 @@
 		if (!global.Appacitive.http) return;
 
 		global.Appacitive.http.addProcessor({
-			pre: function(request) {
+			pre: function (request) {
 				return request;
 			},
-			post: function(response, request) {
+			post: function (response, request) {
 				var _valid = global.Appacitive.session.isSessionValid(response);
 				if (!_valid) {
 					if (global.Appacitive.session.get() != null) {
 						global.Appacitive.session.resetSession();
-						global.Appacitive.session.onSessionCreated = function() {
+						global.Appacitive.session.onSessionCreated = function () {
 							global.Appacitive.http.unpause();
 							global.Appacitive.http.flush();
-							global.Appacitive.session.onSessionCreated = function() { };
+							global.Appacitive.session.onSessionCreated = function () {};
 						}
 						global.Appacitive.session.recreate();
 						global.Appacitive.http.pause();
@@ -453,7 +499,7 @@
 			}
 		});
 
-	})(window || process);
+	})(global);
 
 	/* Http Utilities */
 
@@ -461,21 +507,21 @@
 
 ////// unit test
 var t = 0;
-while (t-- > 0 ) {
+while (t-- > 0) {
 	var req1 = new Appacitive.HttpRequest();
 	req1.url = 'https://apis.appacitive.com/sessionservice.svc/getGraph?rawData=true&from=-1hours&target=stats.pgossamer.account{0}.application1918338163933441.deployment10938369762787624.success';
 	req1.method = 'get';
 	req1.headers = [{
-			key: 'appacitive-session',
-			value: 'BxqkdySwptR0C5iaJfWXd2+6bkWYtEmMYuPC77odDXE='
-		}, {
-			key: 'appacitive-environment',
-			value: 'sandbox'
-		}];
-	req1.onSuccess = function(response) {
+		key: 'appacitive-session',
+		value: 'BxqkdySwptR0C5iaJfWXd2+6bkWYtEmMYuPC77odDXE='
+	}, {
+		key: 'appacitive-environment',
+		value: 'sandbox'
+	}];
+	req1.onSuccess = function (response) {
 		console.dir(response);
 	}
-	req1.onError = function() {
+	req1.onError = function () {
 		console.log('error occured');
 	}
 	Appacitive.http.send(req1);
@@ -529,7 +575,7 @@ while (t-- > 0 ) {
         return (s1.indexOf(s2) == 0);
     }
 
-    window.dateFromWcf = function (input, throwOnInvalidInput) {
+    global.dateFromWcf = function (input, throwOnInvalidInput) {
         var pattern = /Date\(([^)]+)\)/;
         var results = pattern.exec(input);
         if (results.length != 2) {
@@ -545,7 +591,6 @@ while (t-- > 0 ) {
      * @constructor
      */
     var UrlFactory = function () {
-        global.Appacitive = global.Appacitive || {};
         global.Appacitive.bag = global.Appacitive.bag || {};
         global.Appacitive.bag.accountName = global.Appacitive.bag.accountName || {};
         global.Appacitive.bag.selectedType = global.Appacitive.bag.selectedType || {};
@@ -1327,12 +1372,14 @@ while (t-- > 0 ) {
     global.Appacitive.storage = global.Appacitive.storage || {};
     global.Appacitive.storage.urlFactory = new UrlFactory();
 
-})(window || process);/**
+})(global);/**
 Depends on  NOTHING
 **/
 
 (function(global) {
-    
+
+    "use strict";
+
     /**
      * @constructor
     */
@@ -1364,7 +1411,7 @@ Depends on  NOTHING
             if (typeof (_subscriptions[eventName]) == "undefined")
                 _subscriptions[eventName] = [];
 
-            var _id = GUID()
+            var _id = GUID();
             _subscriptions[eventName].push({
                 callback: callback,
                 id: _id
@@ -1375,7 +1422,7 @@ Depends on  NOTHING
 
         this.unsubscribe = function (id) {
             if (!id) return false;
-            var index = -1, eN = null
+            var index = -1, eN = null;
             for (var eventName in _subscriptions) {
                 for (var y = 0; y < _subscriptions[eventName].length; y = y + 1) {
                     if (_subscriptions[eventName][y].id == id) {
@@ -1395,7 +1442,7 @@ Depends on  NOTHING
         this.fire = function (eventName, sender, args) {
             if (typeof (eventName) != "string") throw new Error("Incorrect fire call");
 
-            if (typeof (args) == "undefined" || args == null)
+            if (typeof (args) == "undefined" || args === null)
                 args = {};
             args.eventName = eventName;
 
@@ -1412,13 +1459,15 @@ Depends on  NOTHING
                 }
             }
 
+            var _callback = function (f, s, a) {
+                setTimeout(function () {
+                    f(s, a);
+                }, 0);
+            };
+
             if (typeof (_subscriptions[eventName]) != "undefined") {
-                for (var x = 0; x < _subscriptions[eventName].length; x = x + 1) {
-                    (function (f, s, a) {
-                        setTimeout(function () {
-                            f(s, a);
-                        }, 0);
-                    })(_subscriptions[eventName][x].callback, sender, args);
+                for (var xy= 0; y < _subscriptions[eventName].length; y = y + 1) {
+                    _callback(_subscriptions[eventName][y].callback, sender, args);
                 }
             }
         };
@@ -1441,26 +1490,22 @@ Depends on  NOTHING
             console.dir(_subscriptions);
         };
 
-    }
+    };
 
     global.Appacitive.eventManager = new EventManager();
 
-})(window || process);
+})(global);(function(global) {
 
-/// unit test
-var _function = function(s, a) {
-    console.log('i subscribe to ' + a.eventName);
-}
+	"use strict";
 
-window.Appacitive.eventManager.fire('unit.test');
-(function(global) {
-	
 	global.Appacitive.config = {
 		apiBaseUrl: 'https://apis.appacitive.com/'
-	}
+	};
 
-}(window || process));(function(global) {
-	
+}(global));(function(global) {
+
+	"use strict";
+
 	/**
 	 * @constructor
 	 */
@@ -1474,7 +1519,7 @@ window.Appacitive.eventManager.fire('unit.test');
 			this.isnonsliding = false;
 			this.usagecount = -1;
 			this.windowtime = 240;
-		}
+		};
 
 		var _sessionKey = null;
 		var _appName = null;
@@ -1484,11 +1529,11 @@ window.Appacitive.eventManager.fire('unit.test');
 
 		this.recreate = function() {
 			global.Appacitive.session.create(_options);
-		}
+		};
 
 		this.create = function(options) {
-			if (_sessionKey != null) return;
-			
+			if (_sessionKey !== null) return;
+
 			options = options || {};
 			_options = options;
 
@@ -1501,7 +1546,7 @@ window.Appacitive.eventManager.fire('unit.test');
 			_sRequest.isnonsliding = options.isnonsliding || _sRequest.isnonsliding;
 			_sRequest.usagecount = options.usagecount || _sRequest.usagecount;
 			_sRequest.windowtime = options.windowtime || _sRequest.windowtime;
-			
+
 			var _request = new Appacitive.HttpRequest();
 			_request.url = global.Appacitive.config.apiBaseUrl + 'application.svc/session';
 			_request.method = 'put';
@@ -1517,17 +1562,17 @@ window.Appacitive.eventManager.fire('unit.test');
 					});
 					global.Appacitive.session.onSessionCreated();
 				}
-				else { 
+				else {
 					global.Appacitive.eventManager.fire('session.error', {}, data);
 				}
-			}
+			};
 			global.Appacitive.http.send(_request);
 		};
 
 		var _authToken = null, authEnabled = false;
 		global.Appacitive.http.addProcessor({
 			pre: function(request) {
-				if (authEnabled == true) {
+				if (authEnabled === true) {
 					var userAuthHeader = request.headers.filter(function (uah) {
 						return uah.key == 'appacitive-user-auth';
 					});
@@ -1543,7 +1588,7 @@ window.Appacitive.eventManager.fire('unit.test');
 				}
 			}
 		});
-		
+
 		this.setUserAuthHeader = function(authToken) {
 			authEnabled = true;
 			_authToken = authToken;
@@ -1571,11 +1616,11 @@ window.Appacitive.eventManager.fire('unit.test');
 
 		this.resetSession = function() {
 			_sessionKey = null;
-		}
+		};
 
 		this.get = function() {
 			return _sessionKey;
-		}
+		};
 
 		// the name of the environment, simple public property
 		var _env = 'sandbox';
@@ -1587,11 +1632,11 @@ window.Appacitive.eventManager.fire('unit.test');
 				value = 'sandbox';
 			_env = value;
 		});
-	}
+	};
 
 	global.Appacitive.session = new SessionManager();
 
-} (window || process));
+} (global));
 
 
 // compulsory http plugin
@@ -1607,45 +1652,47 @@ window.Appacitive.eventManager.fire('unit.test');
 		}
 	});
 
-})(window || process);(function(global) {
-	
+})(global);(function(global) {
+
+	"use strict";
+
 	global.Appacitive.queries = {};
 
 	// basic query for contains pagination
 	/** 
 	* @constructor
 	**/
-	var _pageQuery = function(o) {
+	var PageQuery = function(o) {
 		var options = o || {};
 		this.pageNumber = options.pageNumber || 1;
 		this.pageSize = options.pageSize || 200;
-	}
-	_pageQuery.prototype.toString = function() {
+	};
+	PageQuery.prototype.toString = function() {
 		return 'psize=' + this.pageSize + '&pnum=' + this.pageNumber;
-	}
+	};
 
 	// sort query
 	/** 
 	* @constructor
 	**/
-	var _sortQuery = function(o) {
+	var SortQuery = function(o) {
 		o = o || {};
 		this.orderBy = o.orderBy || '__UtcLastUpdatedDate';
 		this.isAscending = typeof o.isAscending == 'undefined' ? false : o.isAscending;
-	}
-	_sortQuery.prototype.toString = function() {
+	};
+	SortQuery.prototype.toString = function() {
 		return 'orderBy=' + this.orderBy + '&isAsc=' + this.isAscending;
-	}
+	};
 
 	// base query
 	/** 
 	* @constructor
 	**/
-	var _baseQuery = function(o) {
+	var BaseQuery = function(o) {
 		var options = o || {};
 
-		this.pageQuery = new _pageQuery(o);
-		this.sortQuery = new _sortQuery(o);
+		this.pageQuery = new PageQuery(o);
+		this.sortQuery = new SortQuery(o);
 		this.type = o.type || 'article';
 		this.baseType = o.schema || o.relation;
 		this.filter = '';
@@ -1654,35 +1701,35 @@ window.Appacitive.eventManager.fire('unit.test');
 			for (var key in changes) {
 				options[key] = changes[key];
 			}
-			this.pageQuery = new _pageQuery(options);
-			this.sortQuery = new _sortQuery(options);
+			this.pageQuery = new PageQuery(options);
+			this.sortQuery = new SortQuery(options);
 		};
 
 		this.setFilter = function(filter) {
 			this.filter = filter;
-		}
+		};
 
 		this.toUrl = function() {
-			var finalUrl = global.Appacitive.config.apiBaseUrl 
-				+ this.type + '.svc/' 
-				+ this.baseType + '/find/all?' + this.pageQuery.toString() + '&' + this.sortQuery.toString();
+			var finalUrl = global.Appacitive.config.apiBaseUrl +
+				this.type + '.svc/' +
+				this.baseType + '/find/all?' + this.pageQuery.toString() + '&' + this.sortQuery.toString();
 
 			if (this.filter.trim().length > 0) {
 				finalUrl += '&query=' + this.filter;
 			}
-			
+
 			return finalUrl;
-		}
-	}
+		};
+	};
 
 	// search all type query
 	/** 
 	* @constructor
 	**/
 	global.Appacitive.queries.SearchAllQuery = function(options) {
-		
+
 		options = options || {};
-		var inner = new _baseQuery(options);
+		var inner = new BaseQuery(options);
 
 		// simple query
 		this.toRequest = function() {
@@ -1694,7 +1741,7 @@ window.Appacitive.eventManager.fire('unit.test');
 
 		this.extendOptions = function() {
 			inner.extendOptions.apply(inner, arguments);
-		}
+		};
 	};
 
 	/** 
@@ -1703,8 +1750,8 @@ window.Appacitive.eventManager.fire('unit.test');
 	global.Appacitive.queries.BasicFilterQuery = function(options) {
 
 		options = options || {};
-		var inner = new _baseQuery(options);
-		
+		var inner = new BaseQuery(options);
+
 		// just append the filters/properties parameter to the query string
 		this.toRequest = function() {
 			var r = new global.Appacitive.HttpRequest();
@@ -1715,7 +1762,7 @@ window.Appacitive.eventManager.fire('unit.test');
 
 		this.extendOptions = function() {
 			inner.extendOptions.apply(inner, arguments);
-		}
+		};
 	};
 
 	/** 
@@ -1724,8 +1771,8 @@ window.Appacitive.eventManager.fire('unit.test');
 	global.Appacitive.queries.GraphQuery = function(options) {
 
 		options = options || {};
-		var inner = new _baseQuery(options);
-		
+		var inner = new BaseQuery(options);
+
 		// just append the filters/properties parameter to the query string
 		this.toRequest = function() {
 			var r = new global.Appacitive.HttpRequest();
@@ -1738,7 +1785,7 @@ window.Appacitive.eventManager.fire('unit.test');
 
 		this.extendOptions = function() {
 			inner.extendOptions.apply(inner, arguments);
-		}
+		};
 	};
 
 	/** 
@@ -1747,26 +1794,28 @@ window.Appacitive.eventManager.fire('unit.test');
 	global.Appacitive.queries.ConnectedArticlesQuery = function(options) {
 
 		options = options || {};
-		var inner = new _baseQuery(options);
+		var inner = new BaseQuery(options);
 
 		this.toRequest = function() {
 			var r = new global.Appacitive.HttpRequest();
-			r.url = global.Appacitive.config.apiBaseUrl + 'connection/' + options.relation + '/' + options.articleId + '/find?' 
-				+ inner.pageQuery.toString() 
-				+ '&' + inner.sortQuery.toString();
+			r.url = global.Appacitive.config.apiBaseUrl + 'connection/' + options.relation + '/' + options.articleId + '/find?' +
+				inner.pageQuery.toString() +
+				'&' + inner.sortQuery.toString();
 			return r;
 		};
 
 		this.extendOptions = function() {
 			inner.extendOptions.apply(inner, arguments);
-		}
+		};
 
 		this.setFilter = function() {
 			inner.setFilter.apply(inner, arguments);
-		}
+		};
 	};
 
-})(window || process);(function(global) {
+})(global);(function(global) {
+
+	"use strict";
 
 	//base object for articles and connections
 	/**
@@ -1809,7 +1858,7 @@ window.Appacitive.eventManager.fire('unit.test');
 				} else {
 					onError();
 				}
-			}
+			};
 			global.Appacitive.http.send(getRequest);
 		};
 
@@ -1841,7 +1890,7 @@ window.Appacitive.eventManager.fire('unit.test');
 			}
 
 			// if deleteConnections is specified
-			if (options.deleteConnections && options.deleteConnections == true) {
+			if (options.deleteConnections && options.deleteConnections === true) {
 				if (url.indexOf('?') == -1) url += '?deleteconnections=true';
 				else url += '&deleteconnections=true';
 			}
@@ -1860,15 +1909,15 @@ window.Appacitive.eventManager.fire('unit.test');
 			};
 			_deleteRequest.beforeSend = function(r) {
 				console.log('DELETE: ' + r.url);
-			}
+			};
 			global.Appacitive.http.send(_deleteRequest);
 		};
 
-		this.getArticle = function() { return article; }
+		this.getArticle = function() { return article; };
 
 		// accessor function for the article's attributes
 		this.attributes = function() {
-			if (arguments.length == 0) {
+			if (arguments.length === 0) {
 				if (!article.__attributes) article.__attributes = {};
 				return article.__attributes;
 			} else if (arguments.length == 1) {
@@ -1891,7 +1940,7 @@ window.Appacitive.eventManager.fire('unit.test');
 					aggregates[key] = article[key];
 				}
 			}
-			if (arguments.length == 0) {
+			if (arguments.length === 0) {
 				return aggregates;
 			} else if (arguments.length == 1) {
 				return aggregates[arguments[0]];
@@ -1904,14 +1953,14 @@ window.Appacitive.eventManager.fire('unit.test');
 			if (key) {
 				return article[key];
 			}
-		}
+		};
 
 		this.set = function(key, value) {
 			if (key) {
 				article[key] = value;
 			}
 			return value;
-		}
+		};
 
 		// save
 		// if the object has an id, then it has been created -> update
@@ -1919,7 +1968,7 @@ window.Appacitive.eventManager.fire('unit.test');
 		this.save = function(onSuccess, onError) {
 			if (article.__id)
 				_update.apply(this, arguments);
-			else 
+			else
 				_create.apply(this, arguments);
 		};
 
@@ -1929,7 +1978,7 @@ window.Appacitive.eventManager.fire('unit.test');
 			var fieldList = [];
 			var changeSet = JSON.parse(JSON.stringify(_snapshot));
 			for (var property in article) {
-				if (typeof article[property] == 'undefined' || article[property] == null) {
+				if (typeof article[property] == 'undefined' || article[property] === null) {
 					changeSet[property] = null;
 					isDirty = true;
 				} else if (article[property] != _snapshot[property]) {
@@ -1939,10 +1988,10 @@ window.Appacitive.eventManager.fire('unit.test');
 					delete changeSet[property];
 				}
 			}
-			
+
 			if (isDirty) {
 				var _updateRequest = new global.Appacitive.HttpRequest();
-				_updateRequest.url = global.Appacitive.config.apiBaseUrl + global.Appacitive.storage.urlFactory[this.type].getUpdateUrl(article.__schematype, _snapshot.__id);
+				_updateRequest.url = global.Appacitive.config.apiBaseUrl + global.Appacitive.storage.urlFactory[this.type].getUpdateUrl(article.__schematype || article.__relationtype, _snapshot.__id);
 				_updateRequest.method = 'post';
 				_updateRequest.data = changeSet;
 				_updateRequest.onSuccess = function(data) {
@@ -2011,89 +2060,90 @@ window.Appacitive.eventManager.fire('unit.test');
 			global.Appacitive.http.send(_saveRequest);
 		};
 
-	}
+	};
 
 	global.Appacitive.BaseObject = _BaseObject;
 
-})(window || process);(function (global) {
+})(global);(function (global) {
+
+	"use strict";
 
 	var S4 = function () {
-	    return Math.floor(Math.random() * 0x10000).toString(16);
+		return Math.floor(Math.random() * 0x10000).toString(16);
 	};
 
 	var _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 
 	var _utf8_encode = function (string) {
-	    string = string.replace(/\r\n/g,"\n");
-	    var utftext = "";
-	    for (var n = 0; n < string.length; n++) {
-	        var c = string.charCodeAt(n);
-	        if (c < 128) {
-	            utftext += String.fromCharCode(c);
-	        }
-	        else if((c > 127) && (c < 2048)) {
-	            utftext += String.fromCharCode((c >> 6) | 192);
-	            utftext += String.fromCharCode((c & 63) | 128);
-	        }
-	        else {
-	            utftext += String.fromCharCode((c >> 12) | 224);
-	            utftext += String.fromCharCode(((c >> 6) & 63) | 128);
-	            utftext += String.fromCharCode((c & 63) | 128);
-	        }
-	    }
-	    return utftext;
-	}
+		string = string.replace(/\r\n/g, "\n");
+		var utftext = "";
+		for (var n = 0; n < string.length; n++) {
+			var c = string.charCodeAt(n);
+			if (c < 128) {
+				utftext += String.fromCharCode(c);
+			} else if ((c > 127) && (c < 2048)) {
+				utftext += String.fromCharCode((c >> 6) | 192);
+				utftext += String.fromCharCode((c & 63) | 128);
+			} else {
+				utftext += String.fromCharCode((c >> 12) | 224);
+				utftext += String.fromCharCode(((c >> 6) & 63) | 128);
+				utftext += String.fromCharCode((c & 63) | 128);
+			}
+		}
+		return utftext;
+	};
 
 	var encodeToBase64 = function (input) {
-	    var output = "";
-	    var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
-	    var i = 0;
-	    input = _utf8_encode(input);
-	    while (i < input.length) {
+		var output = "";
+		var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
+		var i = 0;
+		input = _utf8_encode(input);
+		while (i < input.length) {
 
-	        chr1 = input.charCodeAt(i++);
-	        chr2 = input.charCodeAt(i++);
-	        chr3 = input.charCodeAt(i++);
+			chr1 = input.charCodeAt(i++);
+			chr2 = input.charCodeAt(i++);
+			chr3 = input.charCodeAt(i++);
 
-	        enc1 = chr1 >> 2;
-	        enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
-	        enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
-	        enc4 = chr3 & 63;
+			enc1 = chr1 >> 2;
+			enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+			enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+			enc4 = chr3 & 63;
 
-	        if (isNaN(chr2)) {
-	            enc3 = enc4 = 64;
-	        } else if (isNaN(chr3)) {
-	            enc4 = 64;
-	        }
+			if (isNaN(chr2)) {
+				enc3 = enc4 = 64;
+			} else if (isNaN(chr3)) {
+				enc4 = 64;
+			}
 
-	        output = output +
-	        _keyStr.charAt(enc1) + _keyStr.charAt(enc2) +
-	        _keyStr.charAt(enc3) + _keyStr.charAt(enc4);
-	    }
+			output = output +
+				_keyStr.charAt(enc1) + _keyStr.charAt(enc2) +
+				_keyStr.charAt(enc3) + _keyStr.charAt(enc4);
+		}
 
-	    return output;
+		return output;
 	};
 
 	/**
-	* @constructor
-	**/
-	global.Appacitive.GUID = function() {
-	    return encodeToBase64(
-	            S4() + S4() + "-" +
-	            S4() + "-" +
-	            S4() + "-" +
-	            S4() + "-" +
-	            S4() + S4() + S4()
-	        ).toString();
+	 * @constructor
+	 **/
+	global.Appacitive.GUID = function () {
+		return encodeToBase64(
+		S4() + S4() + "-" +
+			S4() + "-" +
+			S4() + "-" +
+			S4() + "-" +
+			S4() + S4() + S4()).toString();
 	};
 
-})(window || process);(function(global) {
+})(global);(function(global) {
+
+	"use strict";
 
 	/** 
 	* @constructor
 	**/
 	var _ArticleCollection = function(options) {
-		
+
 		var _schema = null;
 		var _query = null;
 		var _articles = [];
@@ -2112,37 +2162,37 @@ window.Appacitive.eventManager.fire('unit.test');
 			_query = new global.Appacitive.queries.SearchAllQuery(options);
 			that.extendOptions = _query.extendOptions;
 			_options = options;
-		}
+		};
 
 		this.setFilter = function(filterString) {
 			_options.filter = filterString;
 			_options.type = 'article';
 			_options.schema = _schema;
 			_query = new global.Appacitive.queries.BasicFilterQuery(options);
-		}
+		};
 
 		this.reset = function() {
 			_options = null;
 			_schema = null;
 			_articles.length = 0;
 			_query = null;
-		}
+		};
 
 		this.getQuery = function() {
 			return _query;
-		}
+		};
 
 		this.setOptions = _parseOptions;
 		_parseOptions(options);
 
 		// getters
 		this.get = function(index) {
-			if (index != parseInt(index)) return null;
-			index = parseInt(index);
+			if (index != parseInt(index, 10)) return null;
+			index = parseInt(index, 10);
 			if (typeof index != 'number') return null;
 			if (index >= _articles.length)  return null;
 			return _articles.slice(index, index + 1)[0];
-		}
+		};
 
 		var fetchArticleById = function(id, onSuccess, onError) {
 
@@ -2157,12 +2207,12 @@ window.Appacitive.eventManager.fire('unit.test');
 					index = i;
 				}
 			});
-			if (index != null) {
+			if (index !=+ null) {
 				_articles.splice(index, 1);
 			} else {
 				_articles.push(article);
 			}
-		}
+		};
 
 		this.getArticle = function(id, onSuccess, onError) {
 			onSuccess = onSuccess || function() {};
@@ -2175,9 +2225,9 @@ window.Appacitive.eventManager.fire('unit.test');
 			} else {
 				onError();
 			}
-		}
+		};
 
-		this.getAll = function() { return Array.prototype.slice.call(_articles); }
+		this.getAll = function() { return Array.prototype.slice.call(_articles); };
 
 		this.removeById = function(id) {
 			if (!id) return false;
@@ -2187,11 +2237,11 @@ window.Appacitive.eventManager.fire('unit.test');
 					index = i;
 				}
 			});
-			if (index != null) {
+			if (index !== null) {
 				_articles.splice(index, 1);
 				return true;
 			} else { return false; }
-		}
+		};
 
 		this.removeByCId = function(id) {
 			if (!id) return false;
@@ -2201,20 +2251,19 @@ window.Appacitive.eventManager.fire('unit.test');
 					index = i;
 				}
 			});
-			if (index != null) {
+			if (index !== null) {
 				_articles.splice(index, 1);
 				return true;
 			} else { return false; }
-		}
+		};
 
-		var that = this;
 		var parseArticles = function (data, onSuccess, onError) {
 			var articles = data.articles;
 			if (!articles) {
 				onError();
 				return;
 			}
-			if (!articles.length || articles.length == 0) articles = [];
+			if (!articles.length || articles.length === 0) articles = [];
 			articles.forEach(function (article) {
 				var _a = new global.Appacitive.Article(article);
 				_a.___collection = that;
@@ -2230,7 +2279,7 @@ window.Appacitive.eventManager.fire('unit.test');
 			var _queryRequest = _query.toRequest();
 			_queryRequest.onSuccess = function(data) {
 				parseArticles(data, onSuccess, onError);
-			}
+			};
 			global.Appacitive.http.send(_queryRequest);
 		};
 
@@ -2239,26 +2288,28 @@ window.Appacitive.eventManager.fire('unit.test');
 			values.__schematype = _schema;
 			var _a = new global.Appacitive.Article(values);
 			_a.___collection = that;
-			_a.__cid = parseInt(Math.random() * 1000000);
+			_a.__cid = parseInt(Math.random() * 1000000, 10);
 			_articles.push(_a);
 			return _a;
 		};
 
-		this.map = function() { return _articles.map.apply(this, arguments); }
-		this.forEach = function() { return _articles.forEach.apply(this, arguments); }
-		this.filter = function() { return _articles.filter.apply(this, arguments); }
+		this.map = function() { return _articles.map.apply(this, arguments); };
+		this.forEach = function() { return _articles.forEach.apply(this, arguments); };
+		this.filter = function() { return _articles.filter.apply(this, arguments); };
 
-	}
+	};
 
 	global.Appacitive.ArticleCollection = _ArticleCollection;
 
-})(window || process);(function(global) {
-	
+})(global);(function(global) {
+
+	"use strict";
+
 	/** 
 	* @constructor
 	**/
 	var _ConnectionCollection = function(options) {
-		
+
 		var _relation = null;
 		var _schema = null;
 
@@ -2266,7 +2317,7 @@ window.Appacitive.eventManager.fire('unit.test');
 
 		var _connections = [];
 		var _articles = [];
-		
+
 		var _options = options;
 		var connectionMap = {};
 
@@ -2281,20 +2332,20 @@ window.Appacitive.eventManager.fire('unit.test');
 			options.type = 'connection';
 			_query = new global.Appacitive.queries.SearchAllQuery(options);
 			_options = options;
-		}
+		};
 
 		this.setFilter = function(filterString) {
 			_options.filter = filterString;
 			_options.type = 'connection';
 			_options.relation = _relation;
 			_query = new global.Appacitive.queries.BasicFilterQuery(options);
-		}
+		};
 
 		this.setQuery = function(query) {
 			if (!query) throw new Error('Invalid query passed to connectionCollection');
 			_connections.length = 0;
 			_query = query;
-		}
+		};
 
 		this.reset = function() {
 			_options = null;
@@ -2302,23 +2353,23 @@ window.Appacitive.eventManager.fire('unit.test');
 			articles.length = 0;
 			_connections.length = 0;
 			_query = null;
-		}
+		};
 
 		this.getQuery = function() {
 			return _query;
-		}
+		};
 
 		this.setOptions = _parseOptions;
 		_parseOptions(options);
 
 		// getters
 		this.get = function(index) {
-			if (index != parseInt(index)) return null;
-			index = parseInt(index);
+			if (index != parseInt(index, 10)) return null;
+			index = parseInt(index, 10);
 			if (typeof index != 'number') return null;
 			if (index >= _connections.length)  return null;
 			return _connections.slice(index, index + 1)[0];
-		}
+		};
 
 		this.addToCollection = function(connection) {
 			if (!connection || connection.get('__relationtype') != _relation)
@@ -2329,12 +2380,12 @@ window.Appacitive.eventManager.fire('unit.test');
 					index = i;
 				}
 			});
-			if (index != null) {
+			if (index !== null) {
 				_connections.splice(index, 1);
 			} else {
 				_connections.push(connection);
 			}
-		}
+		};
 
 		this.getConnection = function(id, onSuccess, onError) {
 			onSuccess = onSuccess || function() {};
@@ -2347,9 +2398,9 @@ window.Appacitive.eventManager.fire('unit.test');
 			} else {
 				onError();
 			}
-		}
+		};
 
-		this.getAll = function() { return Array.prototype.slice.call(_connections); }
+		this.getAll = function() { return Array.prototype.slice.call(_connections); };
 
 		this.removeById = function(id) {
 			if (!id) return false;
@@ -2359,11 +2410,11 @@ window.Appacitive.eventManager.fire('unit.test');
 					index = i;
 				}
 			});
-			if (index != null) {
+			if (index !== null) {
 				_connections.splice(index, 1);
 				return true;
 			} else { return false; }
-		}
+		};
 
 		this.removeByCId = function(id) {
 			if (!id) return false;
@@ -2373,11 +2424,11 @@ window.Appacitive.eventManager.fire('unit.test');
 					index = i;
 				}
 			});
-			if (index != null) {
+			if (index !== null) {
 				_connections.splice(index, 1);
 				return true;
 			} else { return false; }
-		}
+		};
 
 		var that = this;
 		var parseConnections = function (data, onSuccess, onError) {
@@ -2391,7 +2442,7 @@ window.Appacitive.eventManager.fire('unit.test');
 					return;
 				}
 			}
-			if (!connections.length || connections.length == 0) connections = [];
+			if (!connections.length || connections.length === 0) connections = [];
 			connections.forEach(function (connection) {
 				var _c = new global.Appacitive.Connection(connection);
 				_c.___collection = that;
@@ -2410,11 +2461,11 @@ window.Appacitive.eventManager.fire('unit.test');
 		};
 
 		this.getConnectedArticle = function(articleId) {
-			if (!_articles || _articles.length == 0) return null;
-			var article = _articles.filter(function(a) { return a.get('__id') == articleId });
+			if (!_articles || _articles.length === 0) return null;
+			var article = _articles.filter(function(a) { return a.get('__id') == articleId; });
 			if (article.length > 0) return article[0];
 			return null;
-		}
+		};
 
 		this.fetch = function(onSuccess, onError) {
 			onSuccess = onSuccess || function() {};
@@ -2423,7 +2474,7 @@ window.Appacitive.eventManager.fire('unit.test');
 			var _queryRequest = _query.toRequest();
 			_queryRequest.onSuccess = function(data) {
 				parseConnections(data, onSuccess, onError);
-			}
+			};
 			global.Appacitive.http.send(_queryRequest);
 		};
 
@@ -2432,25 +2483,27 @@ window.Appacitive.eventManager.fire('unit.test');
 			values.__relationtype = _relation;
 			var _a = new global.Appacitive.Connection(values);
 			_a.___collection = that;
-			_a.__cid = parseInt(Math.random() * 1000000);
+			_a.__cid = parseInt(Math.random() * 1000000, 10);
 			_connections.push(_a);
 			return _a;
 		};
 
-		this.map = function() { return _connections.map.apply(this, arguments); }
-		
-		this.forEach = function(delegate, context) { 
+		this.map = function() { return _connections.map.apply(this, arguments); };
+
+		this.forEach = function(delegate, context) {
 			context = context || this;
 			return _connections.forEach(delegate, context);
-		}
-		
-		this.filter = function() { return _connections.filter.apply(this, arguments); }
+		};
 
-	}
+		this.filter = function() { return _connections.filter.apply(this, arguments); };
+
+	};
 
 	global.Appacitive.ConnectionCollection = _ConnectionCollection;
 
-})(window || process);(function (global) {
+})(global);(function (global) {
+
+	"use strict";
 
 	var _getFacebookProfile = function(onSuccess, onError) {
 		var r = new global.Appacitive.HttpRequest();
@@ -2466,7 +2519,7 @@ window.Appacitive.eventManager.fire('unit.test');
 					fbUsername = fb[0].username;
 				}
 			}
-			if (fbUsername != null) {
+			if (fbUsername !== null) {
 				FB.api('/' + fbUsername, function(response) {
 					if (response) {
 						onSuccess(response);
@@ -2477,10 +2530,10 @@ window.Appacitive.eventManager.fire('unit.test');
 			} else {
 				onError();
 			}
-		}
+		};
 		r.onError = function() {
 			onError();
-		}
+		};
 		global.Appacitive.http.send(r);
 	};
 
@@ -2494,7 +2547,7 @@ window.Appacitive.eventManager.fire('unit.test');
 		}
 
 		return base;
-	}
+	};
 
 	global.Appacitive.BaseObject.prototype.getConnectedArticles = function(options) {
 		if (this.type != 'article') return null;
@@ -2511,15 +2564,17 @@ window.Appacitive.eventManager.fire('unit.test');
 	};
 
 	global.Appacitive.BaseObject.prototype.getConnected = function(options) {
-		if (!this.type == 'article') return null;
+		if (this.type != 'article') return null;
 		options = options || {};
 		options.onSuccess = options.onSuccess || function(){};
 		options.onError = options.onError || function(){};
 		options.articleId = this.get('__id');
-		
+
 	};
 
-})(window || process);(function (global) {
+})(global);(function (global) {
+
+	"use strict";
 
 	var parseEndpoint = function(endpoint) {
 		var result = {
@@ -2594,11 +2649,13 @@ window.Appacitive.eventManager.fire('unit.test');
 		return base;
 	};
 
-})(window || process);(function (global) {
+})(global);(function (global) {
 
-	global.Appacitive.Users = new (function() {
+	"use strict";
 
-		authenticatedUser = null;
+	var UserManager = function() {
+
+		var authenticatedUser = null;
 
 		this.__defineGetter__('currentUser', function() {
 			return authenticatedUser;
@@ -2608,7 +2665,7 @@ window.Appacitive.eventManager.fire('unit.test');
 			onSuccess = onSuccess || function(){};
 			onError = onError || function(){};
 
-			if (authenticatedUser == null) {
+			if (authenticatedUser === null) {
 				throw new Error('Current user is not set yet');
 			}
 			var currentUserId = authenticatedUser.__id;
@@ -2628,15 +2685,23 @@ window.Appacitive.eventManager.fire('unit.test');
 					onSuccess(data);
 				} else {
 					data = data || {};
-					data.message = data.message || 'Server error'
+					data.message = data.message || 'Server error';
 					onError(data);
 				}
 			};
 			request.onError = onError;
 			global.Appacitive.http.send(request);
-		}
+		};
 
-		this.createUser = function(user, onSuccess, onError) {
+		this.createUser = function(fields, onSuccess, onError) {
+			var users = new Appacitive.ArticleCollection({ schema: 'user' });
+			var user = users.createNewArticle(fields);
+			user.save(function() {
+				onSuccess(user);
+			}, onError);
+		};
+
+		this.createUser1 = function(user, onSuccess, onError) {
 			onSuccess = onSuccess || function(){};
 			onError = onError || function(){};
 			user = user || {};
@@ -2647,7 +2712,6 @@ window.Appacitive.eventManager.fire('unit.test');
 			var request = new global.Appacitive.HttpRequest();
 			request.method = 'put';
 			request.url = global.Appacitive.config.apiBaseUrl + global.Appacitive.storage.urlFactory.user.getCreateUserUrl();
-			console.log('SAVE: ' + request.url);
 			request.data = user;
 			request.onSuccess = function(data) {
 				if (data && data.user) {
@@ -2663,7 +2727,7 @@ window.Appacitive.eventManager.fire('unit.test');
 		this.authenticateUser = function(authRequest, onSuccess, onError) {
 			onSuccess = onSuccess || function(){};
 			onError = onError || function(){};
-			
+
 			var request = new global.Appacitive.HttpRequest();
 			request.method = 'post';
 			request.url = global.Appacitive.config.apiBaseUrl + global.Appacitive.storage.urlFactory.user.getAuthenticateUserUrl();
@@ -2704,21 +2768,25 @@ window.Appacitive.eventManager.fire('unit.test');
 					} else {
 						onError(a);
 					}
-				}
+				};
 				request.onError = function() {
 					onError();
-				}
+				};
 				Appacitive.http.send(request);
 			});
 		};
 
 		this.authenticateWithFacebook = this.signupWithFacebook;
 
-	})();
+	};
 
-})(window || process);(function(global) {
+	global.Appacitive.Users = new UserManager();
 
-	global.Appacitive.email = new (function() {
+})(global);(function(global) {
+
+	"use strict";
+
+	var _emailManager = function() {
 
 		var config = {
 			username: null,
@@ -2733,11 +2801,11 @@ window.Appacitive.eventManager.fire('unit.test');
 		this.getConfig = function() {
 			var _copy = config;
 			return _copy;
-		}
+		};
 
 		this.sendTemplatedEmail = function(options) {
 			throw new Error('Not implemented yet');
-		}
+		};
 
 		this.setupEmail = function(options) {
 			options = options || {};
@@ -2748,19 +2816,19 @@ window.Appacitive.eventManager.fire('unit.test');
 			config.smtpport = options.smtpport || config.smtpport;
 			config.enablessl = options.enablessl || config.enablessl;
 			config.replyto = options.replyto || config.replyto;
-		}
+		};
 
 		this.sendRawEmail = function(options, onSuccess, onError) {
 			onSuccess = onSuccess || function(){};
 			onError = onError || function(){};
 
-			if (!options || !options.to || !options.to.length || !options.to.length == 1) {
+			if (!options || !options.to || !options.to.length || options.to.length != 1) {
 				throw new Error('Atleast one receipient is mandatory to send an email');
 			}
 			if (!options.subject) {
 				throw new Error('Subject is mandatory to send an email');
 			}
-			
+
 			var email = {
 				configuration: config,
 				to: options.to || [],
@@ -2782,20 +2850,24 @@ window.Appacitive.eventManager.fire('unit.test');
 					onSuccess(d.email);
 				} else {
 					d = d || {};
-					d.status = d.status || {}
+					d.status = d.status || {};
 					onError(d.status.message || 'Server error');
 				}
-			}
+			};
 			global.Appacitive.http.send(request);
-		}
+		};
 
-	})();
+	};
 
-})(window || process);(function (global) {
+	global.Appacitive.email = new _emailManager();
 
-	global.Appacitive.facebook = new (function() {
+})(global);(function (global) {
 
-		_accessToken = null;
+	"use strict";
+
+	var _facebook = function() {
+
+		var _accessToken = null;
 
 		this.requestLogin = function(onSuccess, onError) {
 			onSuccess = onSuccess || function(){};
@@ -2813,7 +2885,7 @@ window.Appacitive.eventManager.fire('unit.test');
 					onError();
 				}
 			}, {scope:'email,user_birthday'});
-		}
+		};
 
 		this.getCurrentUserInfo = function(onSuccess, onError) {
 			onSuccess = onSuccess || function(){};
@@ -2825,7 +2897,7 @@ window.Appacitive.eventManager.fire('unit.test');
 					onError();
 				}
 			});
-		}
+		};
 
 		this.__defineGetter__('accessToken', function() {
 			return _accessToken;
@@ -2837,20 +2909,24 @@ window.Appacitive.eventManager.fire('unit.test');
 
 		this.getProfilePictureUrl = function(username) {
 			return 'https://graph.facebook.com/' + username + '/picture';
-		}
+		};
 
 		this.logout = function(onSuccess, onError) {
 			onSuccess = onSuccess || function() {};
 			onError = onError || function(){};
 			try {
 				FB.logout(function(response) {
-				  onSuccess();
+					onSuccess();
 				});
 			} catch(e) {
 				onError(e.message);
 			}
 		};
 
-	})();
+	};
 
-})(window || process);
+	global.Appacitive.facebook = new _facebook();
+
+})(global);if (typeof module != 'undefined') {
+	module.exports.Appacitive = global.Appacitive;
+}

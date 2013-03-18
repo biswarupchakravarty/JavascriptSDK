@@ -1,5 +1,7 @@
 (function(global) {
-	
+
+	"use strict";
+
 	/**
 	 * @constructor
 	 */
@@ -13,7 +15,7 @@
 			this.isnonsliding = false;
 			this.usagecount = -1;
 			this.windowtime = 240;
-		}
+		};
 
 		var _sessionKey = null;
 		var _appName = null;
@@ -23,11 +25,11 @@
 
 		this.recreate = function() {
 			global.Appacitive.session.create(_options);
-		}
+		};
 
 		this.create = function(options) {
-			if (_sessionKey != null) return;
-			
+			if (_sessionKey !== null) return;
+
 			options = options || {};
 			_options = options;
 
@@ -40,7 +42,7 @@
 			_sRequest.isnonsliding = options.isnonsliding || _sRequest.isnonsliding;
 			_sRequest.usagecount = options.usagecount || _sRequest.usagecount;
 			_sRequest.windowtime = options.windowtime || _sRequest.windowtime;
-			
+
 			var _request = new Appacitive.HttpRequest();
 			_request.url = global.Appacitive.config.apiBaseUrl + 'application.svc/session';
 			_request.method = 'put';
@@ -56,17 +58,17 @@
 					});
 					global.Appacitive.session.onSessionCreated();
 				}
-				else { 
+				else {
 					global.Appacitive.eventManager.fire('session.error', {}, data);
 				}
-			}
+			};
 			global.Appacitive.http.send(_request);
 		};
 
 		var _authToken = null, authEnabled = false;
 		global.Appacitive.http.addProcessor({
 			pre: function(request) {
-				if (authEnabled == true) {
+				if (authEnabled === true) {
 					var userAuthHeader = request.headers.filter(function (uah) {
 						return uah.key == 'appacitive-user-auth';
 					});
@@ -82,7 +84,7 @@
 				}
 			}
 		});
-		
+
 		this.setUserAuthHeader = function(authToken) {
 			authEnabled = true;
 			_authToken = authToken;
@@ -110,11 +112,11 @@
 
 		this.resetSession = function() {
 			_sessionKey = null;
-		}
+		};
 
 		this.get = function() {
 			return _sessionKey;
-		}
+		};
 
 		// the name of the environment, simple public property
 		var _env = 'sandbox';
@@ -126,11 +128,11 @@
 				value = 'sandbox';
 			_env = value;
 		});
-	}
+	};
 
 	global.Appacitive.session = new SessionManager();
 
-} (window || process));
+} (global));
 
 
 // compulsory http plugin
@@ -146,4 +148,4 @@
 		}
 	});
 
-})(window || process);
+})(global);

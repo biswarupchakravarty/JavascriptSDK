@@ -1,10 +1,12 @@
 (function(global) {
 
+	"use strict";
+
 	/** 
 	* @constructor
 	**/
 	var _ArticleCollection = function(options) {
-		
+
 		var _schema = null;
 		var _query = null;
 		var _articles = [];
@@ -23,37 +25,37 @@
 			_query = new global.Appacitive.queries.SearchAllQuery(options);
 			that.extendOptions = _query.extendOptions;
 			_options = options;
-		}
+		};
 
 		this.setFilter = function(filterString) {
 			_options.filter = filterString;
 			_options.type = 'article';
 			_options.schema = _schema;
 			_query = new global.Appacitive.queries.BasicFilterQuery(options);
-		}
+		};
 
 		this.reset = function() {
 			_options = null;
 			_schema = null;
 			_articles.length = 0;
 			_query = null;
-		}
+		};
 
 		this.getQuery = function() {
 			return _query;
-		}
+		};
 
 		this.setOptions = _parseOptions;
 		_parseOptions(options);
 
 		// getters
 		this.get = function(index) {
-			if (index != parseInt(index)) return null;
-			index = parseInt(index);
+			if (index != parseInt(index, 10)) return null;
+			index = parseInt(index, 10);
 			if (typeof index != 'number') return null;
 			if (index >= _articles.length)  return null;
 			return _articles.slice(index, index + 1)[0];
-		}
+		};
 
 		var fetchArticleById = function(id, onSuccess, onError) {
 
@@ -68,12 +70,12 @@
 					index = i;
 				}
 			});
-			if (index != null) {
+			if (index !=+ null) {
 				_articles.splice(index, 1);
 			} else {
 				_articles.push(article);
 			}
-		}
+		};
 
 		this.getArticle = function(id, onSuccess, onError) {
 			onSuccess = onSuccess || function() {};
@@ -86,9 +88,9 @@
 			} else {
 				onError();
 			}
-		}
+		};
 
-		this.getAll = function() { return Array.prototype.slice.call(_articles); }
+		this.getAll = function() { return Array.prototype.slice.call(_articles); };
 
 		this.removeById = function(id) {
 			if (!id) return false;
@@ -98,11 +100,11 @@
 					index = i;
 				}
 			});
-			if (index != null) {
+			if (index !== null) {
 				_articles.splice(index, 1);
 				return true;
 			} else { return false; }
-		}
+		};
 
 		this.removeByCId = function(id) {
 			if (!id) return false;
@@ -112,20 +114,19 @@
 					index = i;
 				}
 			});
-			if (index != null) {
+			if (index !== null) {
 				_articles.splice(index, 1);
 				return true;
 			} else { return false; }
-		}
+		};
 
-		var that = this;
 		var parseArticles = function (data, onSuccess, onError) {
 			var articles = data.articles;
 			if (!articles) {
 				onError();
 				return;
 			}
-			if (!articles.length || articles.length == 0) articles = [];
+			if (!articles.length || articles.length === 0) articles = [];
 			articles.forEach(function (article) {
 				var _a = new global.Appacitive.Article(article);
 				_a.___collection = that;
@@ -141,7 +142,7 @@
 			var _queryRequest = _query.toRequest();
 			_queryRequest.onSuccess = function(data) {
 				parseArticles(data, onSuccess, onError);
-			}
+			};
 			global.Appacitive.http.send(_queryRequest);
 		};
 
@@ -150,17 +151,17 @@
 			values.__schematype = _schema;
 			var _a = new global.Appacitive.Article(values);
 			_a.___collection = that;
-			_a.__cid = parseInt(Math.random() * 1000000);
+			_a.__cid = parseInt(Math.random() * 1000000, 10);
 			_articles.push(_a);
 			return _a;
 		};
 
-		this.map = function() { return _articles.map.apply(this, arguments); }
-		this.forEach = function() { return _articles.forEach.apply(this, arguments); }
-		this.filter = function() { return _articles.filter.apply(this, arguments); }
+		this.map = function() { return _articles.map.apply(this, arguments); };
+		this.forEach = function() { return _articles.forEach.apply(this, arguments); };
+		this.filter = function() { return _articles.filter.apply(this, arguments); };
 
-	}
+	};
 
 	global.Appacitive.ArticleCollection = _ArticleCollection;
 
-})(window || process);
+})(global);

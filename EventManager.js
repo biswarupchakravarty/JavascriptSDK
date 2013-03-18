@@ -3,7 +3,9 @@ Depends on  NOTHING
 **/
 
 (function(global) {
-    
+
+    "use strict";
+
     /**
      * @constructor
     */
@@ -35,7 +37,7 @@ Depends on  NOTHING
             if (typeof (_subscriptions[eventName]) == "undefined")
                 _subscriptions[eventName] = [];
 
-            var _id = GUID()
+            var _id = GUID();
             _subscriptions[eventName].push({
                 callback: callback,
                 id: _id
@@ -46,7 +48,7 @@ Depends on  NOTHING
 
         this.unsubscribe = function (id) {
             if (!id) return false;
-            var index = -1, eN = null
+            var index = -1, eN = null;
             for (var eventName in _subscriptions) {
                 for (var y = 0; y < _subscriptions[eventName].length; y = y + 1) {
                     if (_subscriptions[eventName][y].id == id) {
@@ -66,7 +68,7 @@ Depends on  NOTHING
         this.fire = function (eventName, sender, args) {
             if (typeof (eventName) != "string") throw new Error("Incorrect fire call");
 
-            if (typeof (args) == "undefined" || args == null)
+            if (typeof (args) == "undefined" || args === null)
                 args = {};
             args.eventName = eventName;
 
@@ -83,13 +85,15 @@ Depends on  NOTHING
                 }
             }
 
+            var _callback = function (f, s, a) {
+                setTimeout(function () {
+                    f(s, a);
+                }, 0);
+            };
+
             if (typeof (_subscriptions[eventName]) != "undefined") {
-                for (var x = 0; x < _subscriptions[eventName].length; x = x + 1) {
-                    (function (f, s, a) {
-                        setTimeout(function () {
-                            f(s, a);
-                        }, 0);
-                    })(_subscriptions[eventName][x].callback, sender, args);
+                for (var xy= 0; y < _subscriptions[eventName].length; y = y + 1) {
+                    _callback(_subscriptions[eventName][y].callback, sender, args);
                 }
             }
         };
@@ -112,15 +116,8 @@ Depends on  NOTHING
             console.dir(_subscriptions);
         };
 
-    }
+    };
 
     global.Appacitive.eventManager = new EventManager();
 
-})(window || process);
-
-/// unit test
-var _function = function(s, a) {
-    console.log('i subscribe to ' + a.eventName);
-}
-
-window.Appacitive.eventManager.fire('unit.test');
+})(global);
