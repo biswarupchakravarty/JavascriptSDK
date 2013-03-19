@@ -88,6 +88,16 @@
 		this.extendOptions = function() {
 			inner.extendOptions.apply(inner, arguments);
 		};
+
+		this.getOptions = function() {
+			var o = {};
+			for (var key in inner) {
+				if (inner.hasOwnProperty(key) && typeof inner[key] != 'function') {
+					o[key] = inner[key];
+				}
+			}
+			return o;
+		};
 	};
 
 	/** 
@@ -108,6 +118,16 @@
 
 		this.extendOptions = function() {
 			inner.extendOptions.apply(inner, arguments);
+		};
+
+		this.getOptions = function() {
+			var o = {};
+			for (var key in inner) {
+				if (inner.hasOwnProperty(key) && typeof inner[key] != 'function') {
+					o[key] = inner[key];
+				}
+			}
+			return o;
 		};
 	};
 
@@ -131,6 +151,16 @@
 
 		this.extendOptions = function() {
 			inner.extendOptions.apply(inner, arguments);
+		};
+
+		this.getOptions = function() {
+			var o = {};
+			for (var key in inner) {
+				if (inner.hasOwnProperty(key) && typeof inner[key] != 'function') {
+					o[key] = inner[key];
+				}
+			}
+			return o;
 		};
 	};
 
@@ -156,6 +186,16 @@
 
 		this.setFilter = function() {
 			inner.setFilter.apply(inner, arguments);
+		};
+
+		this.getOptions = function() {
+			var o = {};
+			for (var key in inner) {
+				if (inner.hasOwnProperty(key) && typeof inner[key] != 'function') {
+					o[key] = inner[key];
+				}
+			}
+			return o;
 		};
 	};
 
