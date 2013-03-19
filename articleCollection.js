@@ -92,6 +92,12 @@
 
 		this.getAll = function() { return Array.prototype.slice.call(_articles); };
 
+		this.getAllArticles = function() {
+			return Array.prototype.slice.call(_articles).map(function (a) {
+				return a.getArticle();
+			});
+		};
+
 		this.removeById = function(id) {
 			if (!id) return false;
 			var index = null;
@@ -132,7 +138,8 @@
 				_a.___collection = that;
 				_articles.push(_a);
 			});
-			onSuccess();
+			var pagingInfo = data.paginginfo || {};
+			onSuccess(paginginfo);
 		};
 
 		this.fetch = function(onSuccess, onError) {

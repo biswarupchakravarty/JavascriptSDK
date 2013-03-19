@@ -2020,7 +2020,7 @@ Depends on  NOTHING
 	**/
 	var _BaseObject = function(raw) {
 
-		_snapshot = null;
+		var _snapshot = null;
 
 		raw = raw || {};
 		var article = raw;
@@ -2426,6 +2426,12 @@ Depends on  NOTHING
 
 		this.getAll = function() { return Array.prototype.slice.call(_articles); };
 
+		this.getAllArticles = function() {
+			return Array.prototype.slice.call(_articles).map(function (a) {
+				return a.getArticle();
+			});
+		};
+
 		this.removeById = function(id) {
 			if (!id) return false;
 			var index = null;
@@ -2466,7 +2472,8 @@ Depends on  NOTHING
 				_a.___collection = that;
 				_articles.push(_a);
 			});
-			onSuccess();
+			var pagingInfo = data.paginginfo || {};
+			onSuccess(paginginfo);
 		};
 
 		this.fetch = function(onSuccess, onError) {
@@ -2599,6 +2606,12 @@ Depends on  NOTHING
 
 		this.getAll = function() { return Array.prototype.slice.call(_connections); };
 
+		this.getAllConnections = function() {
+			return Array.prototype.slice.call(_connections).map(function (c) {
+				return c.getConnection();
+			});
+		};
+
 		this.removeById = function(id) {
 			if (!id) return false;
 			var index = null;
@@ -2654,7 +2667,8 @@ Depends on  NOTHING
 				}
 			});
 
-			onSuccess();
+			var pagingInfo = data.pagingInfo || {};
+			onSuccess(pagingInfo);
 		};
 
 		this.getConnectedArticle = function(articleId) {

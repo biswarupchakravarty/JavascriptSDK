@@ -8,7 +8,7 @@
 	**/
 	var _BaseObject = function(raw) {
 
-		_snapshot = null;
+		var _snapshot = null;
 
 		raw = raw || {};
 		var article = raw;

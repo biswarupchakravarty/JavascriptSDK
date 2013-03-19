@@ -99,6 +99,12 @@
 
 		this.getAll = function() { return Array.prototype.slice.call(_connections); };
 
+		this.getAllConnections = function() {
+			return Array.prototype.slice.call(_connections).map(function (c) {
+				return c.getConnection();
+			});
+		};
+
 		this.removeById = function(id) {
 			if (!id) return false;
 			var index = null;
@@ -154,7 +160,8 @@
 				}
 			});
 
-			onSuccess();
+			var pagingInfo = data.pagingInfo || {};
+			onSuccess(pagingInfo);
 		};
 
 		this.getConnectedArticle = function(articleId) {
