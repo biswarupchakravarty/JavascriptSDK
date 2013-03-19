@@ -25,7 +25,7 @@ var global;
 			};
 		}
 
-		if (module && module.exports) {
+		if (typeof module != 'undefined' && typeof module.exports != 'undefined') {
 			exports = global.Appacitive;
 		}
 	};
@@ -361,10 +361,167 @@ var global;
 		return _super;
 	};
 
-	var NodeHttpTransport = function() {
-		this.send = function() {
+	var NodeHttpTransport = function () {
 
+		var _super = new HttpTransport();
+
+		_super.type = 'Http provider for nodejs';
+
+		_super.send = function (request, callbacks, states) {
+			if (typeof request.beforeSend == 'function') {
+				request.beforeSend(request);
+			}
+
+			switch (request.method.toLowerCase()) {
+				case 'get':
+					_get(request, callbacks, states);
+					break;
+				case 'post':
+					_post(request, callbacks, states);
+					break;
+				case 'put':
+					_put(request, callbacks, states);
+					break;
+				case 'delete':
+					_delete(request, callbacks, states);
+					break;
+				default:
+					throw new Error('Unrecognized http method: ' + request.method);
+			}
 		};
+
+		_super.isOnline = function () {
+			return true;
+		};
+
+		var _executeCallbacks = function (response, callbacks, states) {
+			if (callbacks.length != states.length) {
+				throw new Error('Callback length and state length mismatch!');
+			}
+
+			for (var x = 0; x < callbacks.length; x += 1) {
+				callbacks[x].apply({}, [response, states[x]]);
+			}
+		};
+
+		var that = _super;
+
+		$ = $ || {};
+		$.ajax = $.ajax || {};
+
+		var _get = function (request, callbacks, states) {
+			$.ajax({
+				url: request.url,
+				type: 'GET',
+				async: request.async,
+				beforeSend: function (xhr) {
+					for (var x = 0; x < request.headers.length; x += 1) {
+						xhr.setRequestHeader(request.headers[x].key, request.headers[x].value);
+					}
+				},
+				success: function (data) {
+					// Hack to make things work in FF
+					try {
+						data = JSON.parse(data);
+					} catch (e) {}
+
+					// execute the callbacks first
+					_executeCallbacks(data, callbacks, states);
+
+					that.onResponse(data, request);
+				},
+				error: function () {
+					that.onError(request);
+				}
+			});
+		};
+
+		var _post = function (request, callbacks, states) {
+			$.ajax({
+				url: request.url,
+				type: 'POST',
+				async: request.async,
+				contentType: "application/json",
+				data: JSON.stringify(request.data),
+				beforeSend: function (xhr) {
+					for (var x = 0; x < request.headers.length; x += 1) {
+						xhr.setRequestHeader(request.headers[x].key, request.headers[x].value);
+					}
+				},
+				success: function (data) {
+					// Hack to make things work in FF
+					try {
+						data = JSON.parse(data);
+					} catch (e) {}
+
+					// execute the callbacks first
+					_executeCallbacks(data, callbacks, states);
+
+					that.onResponse(data, request);
+				},
+				error: function () {
+					that.onError(request);
+				}
+			});
+		};
+
+		var _put = function (request, callbacks, states) {
+			$.ajax({
+				url: request.url,
+				type: 'PUT',
+				contentType: "application/json",
+				data: JSON.stringify(request.data),
+				async: request.async,
+				beforeSend: function (xhr) {
+					for (var x = 0; x < request.headers.length; x += 1) {
+						xhr.setRequestHeader(request.headers[x].key, request.headers[x].value);
+					}
+				},
+				success: function (data) {
+					// Hack to make things work in FF
+					try {
+						data = JSON.parse(data);
+					} catch (e) {}
+
+					// execute the callbacks first
+					_executeCallbacks(data, callbacks, states);
+
+					that.onResponse(data, request);
+				},
+				error: function () {
+					that.onError(request);
+				}
+			});
+		};
+
+		var _delete = function (request, callbacks, states) {
+			$.ajax({
+				url: request.url,
+				type: 'DELETE',
+				async: request.async,
+				beforeSend: function (xhr) {
+					for (var x = 0; x < request.headers.length; x += 1) {
+						xhr.setRequestHeader(request.headers[x].key, request.headers[x].value);
+					}
+				},
+				success: function (data) {
+					// Hack to make things work in FF
+					try {
+						data = JSON.parse(data);
+					} catch (e) {}
+
+					// execute the callbacks first
+					_executeCallbacks(data, callbacks, states);
+
+					that.onResponse(data, request);
+				},
+				error: function () {
+					that.onError(request);
+				}
+			});
+		};
+
+		return _super;
 	};
 
 	// http functionality provider

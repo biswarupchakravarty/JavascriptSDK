@@ -92,7 +92,7 @@ Depends on  NOTHING
             };
 
             if (typeof (_subscriptions[eventName]) != "undefined") {
-                for (var xy= 0; y < _subscriptions[eventName].length; y = y + 1) {
+                for (var y= 0; y < _subscriptions[eventName].length; y = y + 1) {
                     _callback(_subscriptions[eventName][y].callback, sender, args);
                 }
             }
