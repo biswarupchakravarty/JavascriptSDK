@@ -153,6 +153,25 @@
 			global.Appacitive.http.send(_queryRequest);
 		};
 
+		this.fetchByPageNumber = function(onSuccess, onError, pageNumber) {
+			var pInfo = _query.getOptions().pageQuery;
+			pInfo.pageNumber = pageNumber;
+			this.fetch(onSuccess, onError);
+		};
+
+		this.fetchNextPage = function(onSuccess, onError) {
+			var pInfo = _query.getOptions().pageQuery;
+			pInfo.pageNumber += 1;
+			this.fetch(onSuccess, onError);
+		};
+
+		this.fetchPreviousPage = function(onSuccess, onError) {
+			var pInfo = _query.getOptions().pageQuery;
+			pInfo.pageNumber -= 1;
+			if (pInfo.pageNumber === 0) pInfo.pageNumber = 1;
+			this.fetch(onSuccess, onError);
+		};
+
 		this.createNewArticle = function(values) {
 			values = values || {};
 			values.__schematype = _schema;
