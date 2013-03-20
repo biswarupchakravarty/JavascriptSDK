@@ -2473,7 +2473,7 @@ Depends on  NOTHING
 				_articles.push(_a);
 			});
 			var pagingInfo = data.paginginfo || {};
-			onSuccess(paginginfo);
+			onSuccess(pagingInfo);
 		};
 
 		this.fetch = function(onSuccess, onError) {
@@ -2667,7 +2667,7 @@ Depends on  NOTHING
 				}
 			});
 
-			var pagingInfo = data.pagingInfo || {};
+			var pagingInfo = data.paginginfo || {};
 			onSuccess(pagingInfo);
 		};
 

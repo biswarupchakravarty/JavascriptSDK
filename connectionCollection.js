@@ -160,7 +160,7 @@
 				}
 			});
 
-			var pagingInfo = data.pagingInfo || {};
+			var pagingInfo = data.paginginfo || {};
 			onSuccess(pagingInfo);
 		};
 

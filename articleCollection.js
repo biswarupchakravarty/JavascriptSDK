@@ -139,7 +139,7 @@
 				_articles.push(_a);
 			});
 			var pagingInfo = data.paginginfo || {};
-			onSuccess(paginginfo);
+			onSuccess(pagingInfo);
 		};
 
 		this.fetch = function(onSuccess, onError) {
