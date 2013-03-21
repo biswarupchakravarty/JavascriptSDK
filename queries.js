@@ -42,6 +42,7 @@
 		this.type = o.type || 'article';
 		this.baseType = o.schema || o.relation;
 		this.filter = '';
+		this.freeText = '';
 
 		this.extendOptions = function(changes) {
 			for (var key in changes) {
@@ -55,7 +56,11 @@
 			this.filter = filter;
 		};
 
-		this.toUrl = function() {
+		this.setFreeText = function(tokens) {
+            this.freeText = tokens;
+        };
+
+        this.toUrl = function() {
 			var finalUrl = global.Appacitive.config.apiBaseUrl +
 				this.type + '.svc/' +
 				this.baseType + '/find/all?' + this.pageQuery.toString() + '&' + this.sortQuery.toString();
@@ -63,6 +68,10 @@
 			if (this.filter.trim().length > 0) {
 				finalUrl += '&query=' + this.filter;
 			}
+
+			if (this.freeText.trim().length > 0) {
+                finalUrl += "&freetext=" + this.freeText + "&language=en";
+            }
 
 			return finalUrl;
 		};
@@ -111,7 +120,14 @@
 		// just append the filters/properties parameter to the query string
 		this.toRequest = function() {
 			var r = new global.Appacitive.HttpRequest();
-			r.url = inner.toUrl() + '&properties=' + options.filter + '&query=' + options.filter;
+			r.url = inner.toUrl();
+            
+            if (options.filter && options.filter.trim().length > 0)
+                r.url += '&query=' + options.filter;
+
+            if (options.freeText && options.freeText.trim().length > 0)
+                r.url += "&freetext=" + options.freeText + "&language=en";
+           
 			r.method = 'get';
 			return r;
 		};
@@ -187,6 +203,11 @@
 		this.setFilter = function() {
 			inner.setFilter.apply(inner, arguments);
 		};
+
+		this.setFreeText = function() {
+            inner.setFreeText.apply(inner,arguments);
+        };
+
 
 		this.getOptions = function() {
 			var o = {};

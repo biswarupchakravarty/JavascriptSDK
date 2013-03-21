@@ -41,7 +41,7 @@
 						that.___collection.addToCollection(that);
 					onSuccess();
 				} else {
-					onError();
+					onError(data.status);
 				}
 			};
 			global.Appacitive.http.send(getRequest);
@@ -89,7 +89,7 @@
 						that.___collection.removeById(article.__id);
 					onSuccess();
 				} else {
-					onError();
+					onError(data);
 				}
 			};
 			_deleteRequest.beforeSend = function(r) {
@@ -187,7 +187,7 @@
 						}
 					} else {
 						if (typeof onError == 'function') {
-							onError();
+							onError(data.status);
 						}
 					}
 				};
@@ -238,7 +238,7 @@
 					}
 				} else {
 					if (typeof onError == 'function') {
-						onError();
+						onError(data.status);
 					}
 				}
 			};

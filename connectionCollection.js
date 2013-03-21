@@ -141,7 +141,7 @@
 				if (data.status && data.status.code && data.status.code == '200') {
 					connections = [];
 				} else {
-					onError();
+					onError(data.status);
 					return;
 				}
 			}

@@ -34,6 +34,15 @@
 			_query = new global.Appacitive.queries.BasicFilterQuery(options);
 		};
 
+        this.setFreeText = function(tokens) {
+            if(!tokens && tokens.trim().length==0)
+                _options.freeText = "";
+            _options.freeText = tokens;
+            _options.type = 'article';
+            _options.schema = _schema;
+            _query = new global.Appacitive.queries.BasicFilterQuery(options);
+        };
+
 		this.reset = function() {
 			_options = null;
 			_schema = null;
@@ -129,7 +138,7 @@
 		var parseArticles = function (data, onSuccess, onError) {
 			var articles = data.articles;
 			if (!articles) {
-				onError();
+				onError(data.status);
 				return;
 			}
 			if (!articles.length || articles.length === 0) articles = [];

@@ -36,7 +36,7 @@
 			_connections.length = 0;
 			_query = query;
 		};
-
+		
 		this.reset = function() {
 			_options = null;
 			_relation = null;
@@ -128,7 +128,7 @@
 				if (data.status && data.status.code && data.status.code == '200') {
 					connections = [];
 				} else {
-					onError();
+					onError(data.status);
 					return;
 				}
 			}

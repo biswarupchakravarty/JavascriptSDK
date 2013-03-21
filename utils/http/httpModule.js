@@ -639,19 +639,21 @@ var global;
 				return request;
 			},
 			post: function (response, request) {
-				var _valid = global.Appacitive.session.isSessionValid(response);
-				if (!_valid) {
-					if (global.Appacitive.session.get() != null) {
-						global.Appacitive.session.resetSession();
-						global.Appacitive.session.onSessionCreated = function () {
-							global.Appacitive.http.unpause();
-							global.Appacitive.http.flush();
-							global.Appacitive.session.onSessionCreated = function () {};
+				if(false) {
+					var _valid = global.Appacitive.session.isSessionValid(response);
+					if (!_valid) {
+						if (global.Appacitive.session.get() != null) {
+							global.Appacitive.session.resetSession();
+							global.Appacitive.session.onSessionCreated = function () {
+								global.Appacitive.http.unpause();
+								global.Appacitive.http.flush();
+								global.Appacitive.session.onSessionCreated = function () {};
+							}
+							global.Appacitive.session.recreate();
+							global.Appacitive.http.pause();
 						}
-						global.Appacitive.session.recreate();
-						global.Appacitive.http.pause();
+						global.Appacitive.http.send(request);
 					}
-					global.Appacitive.http.send(request);
 				}
 			}
 		});

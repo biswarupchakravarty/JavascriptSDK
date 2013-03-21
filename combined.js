@@ -639,19 +639,21 @@ var global;
 				return request;
 			},
 			post: function (response, request) {
-				var _valid = global.Appacitive.session.isSessionValid(response);
-				if (!_valid) {
-					if (global.Appacitive.session.get() != null) {
-						global.Appacitive.session.resetSession();
-						global.Appacitive.session.onSessionCreated = function () {
-							global.Appacitive.http.unpause();
-							global.Appacitive.http.flush();
-							global.Appacitive.session.onSessionCreated = function () {};
+				if(false) {
+					var _valid = global.Appacitive.session.isSessionValid(response);
+					if (!_valid) {
+						if (global.Appacitive.session.get() != null) {
+							global.Appacitive.session.resetSession();
+							global.Appacitive.session.onSessionCreated = function () {
+								global.Appacitive.http.unpause();
+								global.Appacitive.http.flush();
+								global.Appacitive.session.onSessionCreated = function () {};
+							}
+							global.Appacitive.session.recreate();
+							global.Appacitive.http.pause();
 						}
-						global.Appacitive.session.recreate();
-						global.Appacitive.http.pause();
+						global.Appacitive.http.send(request);
 					}
-					global.Appacitive.http.send(request);
 				}
 			}
 		});
@@ -1853,6 +1855,7 @@ Depends on  NOTHING
 		this.type = o.type || 'article';
 		this.baseType = o.schema || o.relation;
 		this.filter = '';
+		this.freeText = '';
 
 		this.extendOptions = function(changes) {
 			for (var key in changes) {
@@ -1866,7 +1869,11 @@ Depends on  NOTHING
 			this.filter = filter;
 		};
 
-		this.toUrl = function() {
+		this.setFreeText = function(tokens) {
+            this.freeText = tokens;
+        };
+
+        this.toUrl = function() {
 			var finalUrl = global.Appacitive.config.apiBaseUrl +
 				this.type + '.svc/' +
 				this.baseType + '/find/all?' + this.pageQuery.toString() + '&' + this.sortQuery.toString();
@@ -1874,6 +1881,10 @@ Depends on  NOTHING
 			if (this.filter.trim().length > 0) {
 				finalUrl += '&query=' + this.filter;
 			}
+
+			if (this.freeText.trim().length > 0) {
+                finalUrl += "&freetext=" + this.freeText + "&language=en";
+            }
 
 			return finalUrl;
 		};
@@ -1922,7 +1933,14 @@ Depends on  NOTHING
 		// just append the filters/properties parameter to the query string
 		this.toRequest = function() {
 			var r = new global.Appacitive.HttpRequest();
-			r.url = inner.toUrl() + '&properties=' + options.filter + '&query=' + options.filter;
+			r.url = inner.toUrl();
+            
+            if (options.filter && options.filter.trim().length > 0)
+                r.url += '&query=' + options.filter;
+
+            if (options.freeText && options.freeText.trim().length > 0)
+                r.url += "&freetext=" + options.freeText + "&language=en";
+           
 			r.method = 'get';
 			return r;
 		};
@@ -1999,6 +2017,11 @@ Depends on  NOTHING
 			inner.setFilter.apply(inner, arguments);
 		};
 
+		this.setFreeText = function() {
+            inner.setFreeText.apply(inner,arguments);
+        };
+
+
 		this.getOptions = function() {
 			var o = {};
 			for (var key in inner) {
@@ -2053,7 +2076,7 @@ Depends on  NOTHING
 						that.___collection.addToCollection(that);
 					onSuccess();
 				} else {
-					onError();
+					onError(data.status);
 				}
 			};
 			global.Appacitive.http.send(getRequest);
@@ -2101,7 +2124,7 @@ Depends on  NOTHING
 						that.___collection.removeById(article.__id);
 					onSuccess();
 				} else {
-					onError();
+					onError(data);
 				}
 			};
 			_deleteRequest.beforeSend = function(r) {
@@ -2199,7 +2222,7 @@ Depends on  NOTHING
 						}
 					} else {
 						if (typeof onError == 'function') {
-							onError();
+							onError(data.status);
 						}
 					}
 				};
@@ -2250,7 +2273,7 @@ Depends on  NOTHING
 					}
 				} else {
 					if (typeof onError == 'function') {
-						onError();
+						onError(data.status);
 					}
 				}
 			};
@@ -2368,6 +2391,15 @@ Depends on  NOTHING
 			_query = new global.Appacitive.queries.BasicFilterQuery(options);
 		};
 
+        this.setFreeText = function(tokens) {
+            if(!tokens && tokens.trim().length==0)
+                _options.freeText = "";
+            _options.freeText = tokens;
+            _options.type = 'article';
+            _options.schema = _schema;
+            _query = new global.Appacitive.queries.BasicFilterQuery(options);
+        };
+
 		this.reset = function() {
 			_options = null;
 			_schema = null;
@@ -2463,7 +2495,7 @@ Depends on  NOTHING
 		var parseArticles = function (data, onSuccess, onError) {
 			var articles = data.articles;
 			if (!articles) {
-				onError();
+				onError(data.status);
 				return;
 			}
 			if (!articles.length || articles.length === 0) articles = [];
@@ -2667,7 +2699,7 @@ Depends on  NOTHING
 				if (data.status && data.status.code && data.status.code == '200') {
 					connections = [];
 				} else {
-					onError();
+					onError(data.status);
 					return;
 				}
 			}
