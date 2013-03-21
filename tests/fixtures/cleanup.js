@@ -125,7 +125,7 @@ asyncTest('Cleaning up articles of schema user', function() {
 				// authenticateUser(article.get('username'), deleteUser);
 				deleteUser();
 			});
-		}, function() {
+		}, function(e) {
 			ok(false, 'Could not fetch articles for schema user');
 			start();
 		});
