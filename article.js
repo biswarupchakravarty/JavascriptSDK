@@ -35,7 +35,7 @@
 	};
 
 	global.Appacitive.Article = function(options) {
-		var base = new Appacitive.BaseObject(options);
+		var base = new global.Appacitive.BaseObject(options);
 		base.type = 'article';
 		base.connectionCollections = [];
 

@@ -1,3 +1,7 @@
+
 if (typeof module != 'undefined') {
-	module.exports.Appacitive = global.Appacitive;
+	module.exports = function(apikey) {
+		global.Appacitive.initialize({apikey:apikey});
+		return global.Appacitive;
+	}
 }

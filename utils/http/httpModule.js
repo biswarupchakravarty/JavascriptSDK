@@ -1,6 +1,6 @@
 // monolithic file
 
-var global;
+var global = {};
 
 (function () {
 
@@ -23,10 +23,6 @@ var global;
 					isBrowser: typeof window != typeof t
 				}
 			};
-		}
-
-		if (typeof module != 'undefined' && typeof module.exports != 'undefined') {
-			exports = global.Appacitive;
 		}
 	};
 	_initialize();
@@ -372,22 +368,7 @@ var global;
 				request.beforeSend(request);
 			}
 
-			switch (request.method.toLowerCase()) {
-				case 'get':
-					_get(request, callbacks, states);
-					break;
-				case 'post':
-					_post(request, callbacks, states);
-					break;
-				case 'put':
-					_put(request, callbacks, states);
-					break;
-				case 'delete':
-					_delete(request, callbacks, states);
-					break;
-				default:
-					throw new Error('Unrecognized http method: ' + request.method);
-			}
+			sendHttp(request, callbacks, states);
 		};
 
 		_super.isOnline = function () {
@@ -406,120 +387,81 @@ var global;
 
 		var that = _super;
 
-		$ = $ || {};
-		$.ajax = $.ajax || {};
+		var o = {
+		    host: 'localhost',
+		    port: 80,
+		    path: '',
+		    data: "{}",
+		    method: 'GET',
+		    headers: {
+		        'Content-Type': 'application/json',
+		        'accept': 'application/json'
+        	}
+    	};
 
-		var _get = function (request, callbacks, states) {
-			$.ajax({
-				url: request.url,
-				type: 'GET',
-				async: request.async,
-				beforeSend: function (xhr) {
-					for (var x = 0; x < request.headers.length; x += 1) {
-						xhr.setRequestHeader(request.headers[x].key, request.headers[x].value);
-					}
-				},
-				success: function (data) {
-					// Hack to make things work in FF
-					try {
-						data = JSON.parse(data);
-					} catch (e) {}
-
-					// execute the callbacks first
-					_executeCallbacks(data, callbacks, states);
-
-					that.onResponse(data, request);
-				},
-				error: function () {
-					that.onError(request);
-				}
-			});
-		};
-
-		var _post = function (request, callbacks, states) {
-			$.ajax({
-				url: request.url,
-				type: 'POST',
-				async: request.async,
-				contentType: "application/json",
-				data: JSON.stringify(request.data),
-				beforeSend: function (xhr) {
-					for (var x = 0; x < request.headers.length; x += 1) {
-						xhr.setRequestHeader(request.headers[x].key, request.headers[x].value);
-					}
-				},
-				success: function (data) {
-					// Hack to make things work in FF
-					try {
-						data = JSON.parse(data);
-					} catch (e) {}
-
-					// execute the callbacks first
-					_executeCallbacks(data, callbacks, states);
-
-					that.onResponse(data, request);
-				},
-				error: function () {
-					that.onError(request);
-				}
-			});
-		};
-
-		var _put = function (request, callbacks, states) {
-			$.ajax({
-				url: request.url,
-				type: 'PUT',
-				contentType: "application/json",
-				data: JSON.stringify(request.data),
-				async: request.async,
-				beforeSend: function (xhr) {
-					for (var x = 0; x < request.headers.length; x += 1) {
-						xhr.setRequestHeader(request.headers[x].key, request.headers[x].value);
-					}
-				},
-				success: function (data) {
-					// Hack to make things work in FF
-					try {
-						data = JSON.parse(data);
-					} catch (e) {}
-
-					// execute the callbacks first
-					_executeCallbacks(data, callbacks, states);
-
-					that.onResponse(data, request);
-				},
-				error: function () {
-					that.onError(request);
-				}
-			});
-		};
-
-		var _delete = function (request, callbacks, states) {
-			$.ajax({
-				url: request.url,
-				type: 'DELETE',
-				async: request.async,
-				beforeSend: function (xhr) {
-					for (var x = 0; x < request.headers.length; x += 1) {
-						xhr.setRequestHeader(request.headers[x].key, request.headers[x].value);
-					}
-				},
-				success: function (data) {
-					// Hack to make things work in FF
-					try {
-						data = JSON.parse(data);
-					} catch (e) {}
-
-					// execute the callbacks first
-					_executeCallbacks(data, callbacks, states);
-
-					that.onResponse(data, request);
-				},
-				error: function () {
-					that.onError(request);
-				}
-			});
-		};
+		var http = require('http');
+ 
+        var sendHttp = function(options, callbacks, states) {
+            
+            var reqUrl = require('url').parse(options.url);
+ 
+            options = options || {};
+            for (var key in options) {
+                if (key == 'headers') {
+ 
+                    for(var i = 0 ; i < options.headers.length; i = i + 1) {
+                        o.headers[options.headers[i].key] = options.headers[i].value;
+                         }
+                } else {
+                    o[key] = options[key];
+                }
+            }
+            o.host = reqUrl.host;
+            o.port = reqUrl.port || 80;
+            o.path = reqUrl.path;
+            o.method = options.method.toUpperCase();
+            
+            if (typeof o.data != 'string') o.data = JSON.stringify(o.data);
+            o.headers['Content-Length'] = o.data.length;
+            o.headers['Content-Type'] = 'application/json';
+            
+            var x = http.request(o, function (res) {
+                
+                var receivedData = '';
+ 
+                res.setEncoding('utf8');
+ 
+                res.on('data', function (data) {
+                    receivedData += data;
+                });
+ 
+                res.on('end', function() {
+ 
+                    if(res.headers["content-type"] == "application/json" && res.statusCode == "200" ){
+                
+                        if (receivedData[0] != "{") receivedData = receivedData.substr(1, receivedData.length - 1);
+                        
+                        res.json = JSON.parse(receivedData);
+ 
+                        // execute the callbacks first
+                        _executeCallbacks(res.json, callbacks, states);
+ 
+                        that.onResponse(res.json, options);
+                    } else {
+                        res.text = receivedData;
+                        that.onError(options,res);
+                    };
+ 
+                });
+            });
+ 
+            x.write(o.data);
+            x.on('error',function(e){
+                res.text = receivedData;
+                that.onError(options,res);
+            });
+            x.end();
+        };
 
 		return _super;
 	};

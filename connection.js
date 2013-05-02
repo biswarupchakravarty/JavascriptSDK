@@ -36,7 +36,7 @@
 	};
 
 	global.Appacitive.Connection = function(options) {
-		var base = new Appacitive.BaseObject(options);
+		var base = new global.Appacitive.BaseObject(options);
 		base.type = 'connection';
 		base.getConnection = base.getArticle;
 

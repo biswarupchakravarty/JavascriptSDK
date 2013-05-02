@@ -32,7 +32,7 @@ try {
 } catch(defPropException) {/*Do nothing if an exception occurs*/};
 // monolithic file
 
-var global;
+var global = {};
 
 (function () {
 
@@ -55,10 +55,6 @@ var global;
 					isBrowser: typeof window != typeof t
 				}
 			};
-		}
-
-		if (typeof module != 'undefined' && typeof module.exports != 'undefined') {
-			exports = global.Appacitive;
 		}
 	};
 	_initialize();
@@ -404,22 +400,7 @@ var global;
 				request.beforeSend(request);
 			}
 
-			switch (request.method.toLowerCase()) {
-				case 'get':
-					_get(request, callbacks, states);
-					break;
-				case 'post':
-					_post(request, callbacks, states);
-					break;
-				case 'put':
-					_put(request, callbacks, states);
-					break;
-				case 'delete':
-					_delete(request, callbacks, states);
-					break;
-				default:
-					throw new Error('Unrecognized http method: ' + request.method);
-			}
+			sendHttp(request, callbacks, states);
 		};
 
 		_super.isOnline = function () {
@@ -438,120 +419,81 @@ var global;
 
 		var that = _super;
 
-		$ = $ || {};
-		$.ajax = $.ajax || {};
+		var o = {
+		    host: 'localhost',
+		    port: 80,
+		    path: '',
+		    data: "{}",
+		    method: 'GET',
+		    headers: {
+		        'Content-Type': 'application/json',
+		        'accept': 'application/json'
+        	}
+    	};
 
-		var _get = function (request, callbacks, states) {
-			$.ajax({
-				url: request.url,
-				type: 'GET',
-				async: request.async,
-				beforeSend: function (xhr) {
-					for (var x = 0; x < request.headers.length; x += 1) {
-						xhr.setRequestHeader(request.headers[x].key, request.headers[x].value);
-					}
-				},
-				success: function (data) {
-					// Hack to make things work in FF
-					try {
-						data = JSON.parse(data);
-					} catch (e) {}
-
-					// execute the callbacks first
-					_executeCallbacks(data, callbacks, states);
-
-					that.onResponse(data, request);
-				},
-				error: function () {
-					that.onError(request);
-				}
-			});
-		};
-
-		var _post = function (request, callbacks, states) {
-			$.ajax({
-				url: request.url,
-				type: 'POST',
-				async: request.async,
-				contentType: "application/json",
-				data: JSON.stringify(request.data),
-				beforeSend: function (xhr) {
-					for (var x = 0; x < request.headers.length; x += 1) {
-						xhr.setRequestHeader(request.headers[x].key, request.headers[x].value);
-					}
-				},
-				success: function (data) {
-					// Hack to make things work in FF
-					try {
-						data = JSON.parse(data);
-					} catch (e) {}
-
-					// execute the callbacks first
-					_executeCallbacks(data, callbacks, states);
-
-					that.onResponse(data, request);
-				},
-				error: function () {
-					that.onError(request);
-				}
-			});
-		};
-
-		var _put = function (request, callbacks, states) {
-			$.ajax({
-				url: request.url,
-				type: 'PUT',
-				contentType: "application/json",
-				data: JSON.stringify(request.data),
-				async: request.async,
-				beforeSend: function (xhr) {
-					for (var x = 0; x < request.headers.length; x += 1) {
-						xhr.setRequestHeader(request.headers[x].key, request.headers[x].value);
-					}
-				},
-				success: function (data) {
-					// Hack to make things work in FF
-					try {
-						data = JSON.parse(data);
-					} catch (e) {}
-
-					// execute the callbacks first
-					_executeCallbacks(data, callbacks, states);
-
-					that.onResponse(data, request);
-				},
-				error: function () {
-					that.onError(request);
-				}
-			});
-		};
-
-		var _delete = function (request, callbacks, states) {
-			$.ajax({
-				url: request.url,
-				type: 'DELETE',
-				async: request.async,
-				beforeSend: function (xhr) {
-					for (var x = 0; x < request.headers.length; x += 1) {
-						xhr.setRequestHeader(request.headers[x].key, request.headers[x].value);
-					}
-				},
-				success: function (data) {
-					// Hack to make things work in FF
-					try {
-						data = JSON.parse(data);
-					} catch (e) {}
-
-					// execute the callbacks first
-					_executeCallbacks(data, callbacks, states);
-
-					that.onResponse(data, request);
-				},
-				error: function () {
-					that.onError(request);
-				}
-			});
-		};
+		var http = require('http');
+ 
+        var sendHttp = function(options, callbacks, states) {
+            
+            var reqUrl = require('url').parse(options.url);
+ 
+            options = options || {};
+            for (var key in options) {
+                if (key == 'headers') {
+ 
+                    for(var i = 0 ; i < options.headers.length; i = i + 1) {
+                        o.headers[options.headers[i].key] = options.headers[i].value;
+                         }
+                } else {
+                    o[key] = options[key];
+                }
+            }
+            o.host = reqUrl.host;
+            o.port = reqUrl.port || 80;
+            o.path = reqUrl.path;
+            o.method = options.method.toUpperCase();
+            
+            if (typeof o.data != 'string') o.data = JSON.stringify(o.data);
+            o.headers['Content-Length'] = o.data.length;
+            o.headers['Content-Type'] = 'application/json';
+            
+            var x = http.request(o, function (res) {
+                
+                var receivedData = '';
+ 
+                res.setEncoding('utf8');
+ 
+                res.on('data', function (data) {
+                    receivedData += data;
+                });
+ 
+                res.on('end', function() {
+ 
+                    if(res.headers["content-type"] == "application/json" && res.statusCode == "200" ){
+                
+                        if (receivedData[0] != "{") receivedData = receivedData.substr(1, receivedData.length - 1);
+                        
+                        res.json = JSON.parse(receivedData);
+ 
+                        // execute the callbacks first
+                        _executeCallbacks(res.json, callbacks, states);
+ 
+                        that.onResponse(res.json, options);
+                    } else {
+                        res.text = receivedData;
+                        that.onError(options,res);
+                    };
+ 
+                });
+            });
+ 
+            x.write(o.data);
+            x.on('error',function(e){
+                res.text = receivedData;
+                that.onError(options,res);
+            });
+            x.end();
+        };
 
 		return _super;
 	};
@@ -1715,6 +1657,9 @@ Depends on  NOTHING
 		var _sessionKey = null;
 		var _appName = null;
 		var _options = null;
+		var _apikey = null;
+
+		this.useApiKey = true ;
 
 		this.onSessionCreated = function() {};
 
@@ -1723,8 +1668,7 @@ Depends on  NOTHING
 		};
 
 		this.create = function(options) {
-			if (_sessionKey !== null) return;
-
+			
 			options = options || {};
 			_options = options;
 
@@ -1733,24 +1677,28 @@ Depends on  NOTHING
 
 			// create the session
 			var _sRequest = new _sessionRequest();
-			_sRequest.apikey = options.apikey || '';
+
+			if (options.apikey) {
+				_sRequest.apikey = options.apikey || '';
+				_apikey = _sRequest.apikey;
+			}else {
+				_sRequest.apikey = _apikey
+			}
+			
+
 			_sRequest.isnonsliding = options.isnonsliding || _sRequest.isnonsliding;
 			_sRequest.usagecount = options.usagecount || _sRequest.usagecount;
 			_sRequest.windowtime = options.windowtime || _sRequest.windowtime;
 
-			var _request = new Appacitive.HttpRequest();
+			var _request = new global.Appacitive.HttpRequest();
 			_request.url = global.Appacitive.config.apiBaseUrl + 'application.svc/session';
 			_request.method = 'put';
 			_request.data = _sRequest;
 			_request.onSuccess = function(data) {
 				if (data && data.status && data.status.code == '200') {
 					_sessionKey = data.session.sessionkey;
+					global.Appacitive.session.useApiKey = false;
 					global.Appacitive.eventManager.fire('session.success', {}, data);
-					global.Appacitive.http.addProcessor({
-						pre: function(req) {
-							req.headers.push({ key: 'appacitive-session', value: _sessionKey });
-						}
-					});
 					global.Appacitive.session.onSessionCreated();
 				}
 				else {
@@ -1763,6 +1711,12 @@ Depends on  NOTHING
 		var _authToken = null, authEnabled = false;
 		global.Appacitive.http.addProcessor({
 			pre: function(request) {
+				if (global.Appacitive.session.useApiKey) {
+					request.headers.push({ key: 'appacitive-apikey', value: _apikey });
+				} else{
+					request.headers.push({ key: 'appacitive-session', value: _sessionKey });
+				}
+
 				if (authEnabled === true) {
 					var userAuthHeader = request.headers.filter(function (uah) {
 						return uah.key == 'appacitive-user-auth';
@@ -1813,6 +1767,14 @@ Depends on  NOTHING
 			return _sessionKey;
 		};
 
+		this.setSession = function(session){
+			_sessionKey = session;
+		}
+
+		this.setApiKey = function(apikey){
+			_apikey = apikey;
+		}
+
 		// the name of the environment, simple public property
 		var _env = 'sandbox';
 		this.__defineGetter__('environment', function() {
@@ -1826,6 +1788,12 @@ Depends on  NOTHING
 	};
 
 	global.Appacitive.session = new SessionManager();
+
+	global.Appacitive.initialize = function(options) {
+		global.Appacitive.session.setApiKey( options.apikey || '' ) ;
+		global.Appacitive.session.environment = ( options.env || '' );
+		global.Appacitive.useApiKey = true;
+	}
 
 } (global));
 
@@ -2832,7 +2800,7 @@ Depends on  NOTHING
 	};
 
 	global.Appacitive.Article = function(options) {
-		var base = new Appacitive.BaseObject(options);
+		var base = new global.Appacitive.BaseObject(options);
 		base.type = 'article';
 		base.connectionCollections = [];
 
@@ -2904,7 +2872,7 @@ Depends on  NOTHING
 	};
 
 	global.Appacitive.Connection = function(options) {
-		var base = new Appacitive.BaseObject(options);
+		var base = new global.Appacitive.BaseObject(options);
 		base.type = 'connection';
 		base.getConnection = base.getArticle;
 
@@ -3221,6 +3189,10 @@ Depends on  NOTHING
 
 	global.Appacitive.facebook = new _facebook();
 
-})(global);if (typeof module != 'undefined') {
-	module.exports.Appacitive = global.Appacitive;
+})(global);
+if (typeof module != 'undefined') {
+	module.exports = function(apikey) {
+		global.Appacitive.initialize({apikey:apikey});
+		return global.Appacitive;
+	}
 }

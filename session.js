@@ -20,6 +20,9 @@
 		var _sessionKey = null;
 		var _appName = null;
 		var _options = null;
+		var _apikey = null;
+
+		this.useApiKey = true ;
 
 		this.onSessionCreated = function() {};
 
@@ -28,8 +31,7 @@
 		};
 
 		this.create = function(options) {
-			if (_sessionKey !== null) return;
-
+			
 			options = options || {};
 			_options = options;
 
@@ -38,24 +40,28 @@
 
 			// create the session
 			var _sRequest = new _sessionRequest();
-			_sRequest.apikey = options.apikey || '';
+
+			if (options.apikey) {
+				_sRequest.apikey = options.apikey || '';
+				_apikey = _sRequest.apikey;
+			}else {
+				_sRequest.apikey = _apikey
+			}
+			
+
 			_sRequest.isnonsliding = options.isnonsliding || _sRequest.isnonsliding;
 			_sRequest.usagecount = options.usagecount || _sRequest.usagecount;
 			_sRequest.windowtime = options.windowtime || _sRequest.windowtime;
 
-			var _request = new Appacitive.HttpRequest();
+			var _request = new global.Appacitive.HttpRequest();
 			_request.url = global.Appacitive.config.apiBaseUrl + 'application.svc/session';
 			_request.method = 'put';
 			_request.data = _sRequest;
 			_request.onSuccess = function(data) {
 				if (data && data.status && data.status.code == '200') {
 					_sessionKey = data.session.sessionkey;
+					global.Appacitive.session.useApiKey = false;
 					global.Appacitive.eventManager.fire('session.success', {}, data);
-					global.Appacitive.http.addProcessor({
-						pre: function(req) {
-							req.headers.push({ key: 'appacitive-session', value: _sessionKey });
-						}
-					});
 					global.Appacitive.session.onSessionCreated();
 				}
 				else {
@@ -68,6 +74,12 @@
 		var _authToken = null, authEnabled = false;
 		global.Appacitive.http.addProcessor({
 			pre: function(request) {
+				if (global.Appacitive.session.useApiKey) {
+					request.headers.push({ key: 'appacitive-apikey', value: _apikey });
+				} else{
+					request.headers.push({ key: 'appacitive-session', value: _sessionKey });
+				}
+
 				if (authEnabled === true) {
 					var userAuthHeader = request.headers.filter(function (uah) {
 						return uah.key == 'appacitive-user-auth';
@@ -118,6 +130,14 @@
 			return _sessionKey;
 		};
 
+		this.setSession = function(session){
+			_sessionKey = session;
+		}
+
+		this.setApiKey = function(apikey){
+			_apikey = apikey;
+		}
+
 		// the name of the environment, simple public property
 		var _env = 'sandbox';
 		this.__defineGetter__('environment', function() {
@@ -131,6 +151,12 @@
 	};
 
 	global.Appacitive.session = new SessionManager();
+
+	global.Appacitive.initialize = function(options) {
+		global.Appacitive.session.setApiKey( options.apikey || '' ) ;
+		global.Appacitive.session.environment = ( options.env || '' );
+		global.Appacitive.useApiKey = true;
+	}
 
 } (global));
 
